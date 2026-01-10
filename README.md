@@ -23,11 +23,11 @@ The agents are designed to analyze my full background, not just technical skills
 
 ```mermaid
 graph TD
-    User[User / Researcher] -->|1. Input Constraints & JD Batch| Agent[Local LLM Agent<br/>(Llama-3 / Mistral)]
+    User[User / Researcher] -->|1. Input Constraints & JD Batch| Agent["Local LLM Agent<br/>(Llama-3 / Mistral)"]
     
     subgraph "Phase 1: Semantic Filtering"
-        Agent -->|Read| Rules[Constraints.md<br/>(Tax, Visa, Tech Stack)]
-        Agent -->|Analyze| JDs[(Raw JD Files)]
+        Agent -->|Read| Rules["Constraints.md<br/>(Tax, Visa, Tech Stack)"]
+        Agent -->|Analyze| JDs[("Raw JD Files")]
         Agent -->|Reasoning| Decision{Match?}
         Decision -- No --> Trash[Discard]
         Decision -- Yes --> Shortlist[Shortlisted Candidates]
@@ -35,7 +35,7 @@ graph TD
 
     subgraph "Phase 2: Contextual Planning"
         Shortlist -->|Trigger| Planner[Resume Planner Skill]
-        Planner -->|RAG Retrieval| MasterCV[(Master CV Database)]
+        Planner -->|RAG Retrieval| MasterCV[("Master CV Database")]
         Planner -->|Extract & Structure| Context[Structured Context]
     end
 
