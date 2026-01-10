@@ -27,8 +27,10 @@ graph TD
     
     %% 資料庫與設定
     subgraph "Knowledge Base"
-        ConstraintDB[("User Profile DB<br/>(Visa, Tax, salary)")]
-        MasterCV[("Master CV Database<br/>(Projects & Skills)")]
+        %% 修正1: 使用 [("...")] 語法呈現資料庫圓柱體形狀
+        ConstraintDB[("User Profile DB<br/>(Visa, Tax, Salary)")]
+        %% 修正2: 將詳細文字整合進這裡的定義
+        MasterCV[("Database<br/>(Research Experience,<br/>Projects, Publications)")]
     end
 
     %% 第一階段：過濾
@@ -42,7 +44,8 @@ graph TD
     %% 第二階段：分析與建議
     subgraph "Phase 2: Contextual Analysis (Soft Matching)"
         Decision -- Yes --> Analyzer[Analysis Skill]
-        Analyzer <-->|RAG Retrieval| Database <br>("Research Experience, Projects, Publications")
+        %% 修正3: 這裡直接連回上面定義好的 Node ID (MasterCV)，不要直接寫文字
+        Analyzer <-->|RAG Retrieval| MasterCV
         Analyzer -->|Map Experience| Context[Structured Insight]
     end
 
@@ -50,7 +53,7 @@ graph TD
     subgraph "Phase 3: Output & Review"
         Context -->|Drafting| Writer[Content Generator]
         Writer -->|Output| Report["Analysis Report &<br/>Suggestions"]
-        Report -->|Final Check| Human[User Review & Tailor Resume/CV]
+        Report -->|Final Check| Human["User Review &<br/>Tailor Resume/CV"]
     end
 
     style Agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
