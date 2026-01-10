@@ -23,29 +23,40 @@ The agents are designed to analyze my full background, not just technical skills
 
 ```mermaid
 graph TD
-    User[User / Researcher] -->|1. Input Constraints & JD Batch| Agent["Local LLM Agent<br/>(Llama-3 / Mistral)"]
+    User[User / Researcher] -->|1. Input JD Batch| Agent["Local LLM Agent<br/>(Llama-3 / Mistral)"]
     
-    subgraph "Phase 1: Semantic Filtering"
-        Agent -->|Read| Rules["Constraints.md<br/>(Tax, Visa, Tech Stack)"]
+    %% 資料庫與設定
+    subgraph "Knowledge Base"
+        ConstraintDB[("User Profile DB<br/>(Visa, Tax, salary)")]
+        MasterCV[("Master CV Database<br/>(Projects & Skills)")]
+    end
+
+    %% 第一階段：過濾
+    subgraph "Phase 1: Semantic Filtering (Hard Filters)"
+        Agent <-->|Query Constraints| ConstraintDB
         Agent -->|Analyze| JDs[("Raw JD Files")]
-        Agent -->|Reasoning| Decision{Match?}
+        Agent -->|Reasoning| Decision{Pass Constraints?}
         Decision -- No --> Trash[Discard]
-        Decision -- Yes --> Shortlist[Shortlisted Candidates]
     end
 
-    subgraph "Phase 2: Contextual Planning"
-        Shortlist -->|Trigger| Planner[Resume Planner Skill]
-        Planner -->|RAG Retrieval| MasterCV[("Master CV Database")]
-        Planner -->|Extract & Structure| Context[Structured Context]
+    %% 第二階段：分析與建議
+    subgraph "Phase 2: Contextual Analysis (Soft Matching)"
+        Decision -- Yes --> Analyzer[Analysis Skill]
+        Analyzer <-->|RAG Retrieval| Database <br>("Research Experience, Projects, Publications")
+        Analyzer -->|Map Experience| Context[Structured Insight]
     end
 
-    subgraph "Phase 3: Generation"
-        Context -->|Prompting| Writer[Content Generator]
-        Writer -->|Output| Final[Tailored Cover Letter / JSON Config]
+    %% 第三階段：輸出
+    subgraph "Phase 3: Output & Review"
+        Context -->|Drafting| Writer[Content Generator]
+        Writer -->|Output| Report["Analysis Report &<br/>Suggestions"]
+        Report -->|Final Check| Human[User Review & Tailor Resume/CV]
     end
 
-    style Agent fill:#f9f,stroke:#333,stroke-width:2px
-    style Planner fill:#bbf,stroke:#333,stroke-width:2px
+    style Agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style ConstraintDB fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    style MasterCV fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
+    style Human fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
 ```
 
 ## 🚀 Key Features
