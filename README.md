@@ -14,28 +14,27 @@ Crucially, this project also serves as the pilot for a research project: **Real-
 By treating video generation models and task-specific LoRAs as "Agents," the future research aims to leverage this same agentic workflow to significantly improve efficiency and reduce computational costs in synthetic data generation.
 
 ## 📖 Introduction
-This project implements a privacy-first **Local LLM Agent** designed to leverage extensive user context to identify job descriptions that best fit my expertise.
 
-The agents are designed to analyze my full background, not just technical skills but also long-term financial plans and hard constraints like visa sponsorship. They evaluate whether a JD truly meets my needs and extract the most relevant information, enabling me to further evaluate the position and tailor my resume and cover letter accordingly.
+This project implements a **Hybrid AI Agent** powered by Google Gemini API, designed to leverage extensive user context to identify job descriptions that best fit my expertise.
+
+Unlike purely local solutions, this system utilizes the state-of-the-art reasoning capabilities and long-context window of Gemini models to analyze my full background: including technical skills, financial goals, and visa constraints. It acts as an intelligent orchestrator that filters noise and provides strategic application advice, while keeping the core document storage (CVs/Databases) managed locally.
 
 
 ## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    User[User / Researcher] -->|1. Input JD Batch| Agent["Local LLM Agent<br/>(Llama-3 / Mistral)"]
+    User[User / Researcher] -->|1. Input JD Batch| Agent["AI Agent Orchestrator<br/>(Google Gemini API)"]
     
-    %% 資料庫與設定
-    subgraph "Knowledge Base"
-        %% 修正1: 使用 [("...")] 語法呈現資料庫圓柱體形狀
+    %% 資料庫與設定 (Local)
+    subgraph "Local Knowledge Base"
         ConstraintDB[("User Profile DB<br/>(Visa, Tax, Salary)")]
-        %% 修正2: 將詳細文字整合進這裡的定義
-        MasterCV[("Database<br/>(Research Experience,<br/>Projects, Publications)")]
+        MasterCV[("Master CV Database<br/>(Projects & Skills)")]
     end
 
     %% 第一階段：過濾
     subgraph "Phase 1: Semantic Filtering (Hard Filters)"
-        Agent <-->|Query Constraints| ConstraintDB
+        Agent <-->|API Call + Context| ConstraintDB
         Agent -->|Analyze| JDs[("Raw JD Files")]
         Agent -->|Reasoning| Decision{Pass Constraints?}
         Decision -- No --> Trash[Discard]
@@ -44,7 +43,6 @@ graph TD
     %% 第二階段：分析與建議
     subgraph "Phase 2: Contextual Analysis (Soft Matching)"
         Decision -- Yes --> Analyzer[Analysis Skill]
-        %% 修正3: 這裡直接連回上面定義好的 Node ID (MasterCV)，不要直接寫文字
         Analyzer <-->|RAG Retrieval| MasterCV
         Analyzer -->|Map Experience| Context[Structured Insight]
     end
@@ -52,29 +50,29 @@ graph TD
     %% 第三階段：輸出
     subgraph "Phase 3: Output & Review"
         Context -->|Drafting| Writer[Content Generator]
-        Writer -->|Output| Report["Analysis Report &<br/>Suggestions"]
+        Writer -->|Output| Report["Analysis Report &<br/>Draft Suggestions"]
         Report -->|Final Check| Human["User Review &<br/>Tailor Resume/CV"]
     end
 
-    style Agent fill:#e1f5fe,stroke:#01579b,stroke-width:2px,color:#000
+    style Agent fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
     style ConstraintDB fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
     style MasterCV fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
     style Human fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
 ```
 
 ## 🚀 Key Features
-1.  **Semantic Filtering:**
-    * Instead of traditional keyword matching, the agent "reads" JDs to understand nuances (e.g., rejecting positions requiring specific visa sponsorships or deprecated legacy tech).
+1.  **SOTA Semantic Filtering:**
+    * Leverages Google Gemini's advanced reasoning to understand subtle nuances in JDs (e.g., distinguishing between "required" vs. "nice-to-have" skills, or detecting implicit visa restrictions).
 2.  **Context-Aware Planning (RAG):**
-    * Dynamically retrieves the most relevant project experiences from a personal database based on the specific requirements of the target position.
-3.  **Local Execution:**
-    * Runs entirely on local consumer hardware (NVIDIA Laptop GPU), ensuring sensitive personal data (CVs, personal constraints) never leaves the machine.
+    * Dynamically retrieves the most relevant project experiences from a local personal database based on the specific requirements of the target position.
+3.  **Hybrid Efficiency:**
+    * Combines the low latency of local vector stores (ChromaDB) with the high-throughput inference of the Gemini API, ensuring a balance between performance and cost.
 
 ## 🛠️ Tech Stack
-* **Orchestration:** Python, LangChain / AutoGen
-* **Inference Engine:** Ollama / vLLM (Quantized Models)
-* **Vector Store:** ChromaDB (for Context Retrieval)
-* **Hardware:** Tested on NVIDIA Laptop GPU (RTX 4060)
+* **Orchestration:** Python, Google Generative AI SDK (Gemini API)
+* **Model:** Gemma-3-27b / Pro
+* **Vector Store:** ChromaDB (Local Storage)
+* **Environment:** Python 3.10+
 
 ---
 *This project is part of a broader research initiative on Agentic AI workflows for Data Synthesis.*
