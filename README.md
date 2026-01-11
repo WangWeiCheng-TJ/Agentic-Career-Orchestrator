@@ -24,7 +24,7 @@ Unlike purely local solutions, this system utilizes the state-of-the-art reasoni
 
 ```mermaid
 graph TD
-    User[User / Researcher] -->|1. Input JD Batch<br/>(Text / Screenshots)| Agent["AI Agent Orchestrator<br/>(Gemini 1.5 Pro - Text & Vision)"]
+    User["User / Researcher"] -->|"1. Input JD Batch<br/>(Text / Screenshots)"| Agent["AI Agent Orchestrator<br/>(Gemini 1.5 Pro - Text & Vision)"]
     
     %% 資料庫與設定 (Local)
     subgraph "Local Knowledge Base"
@@ -34,24 +34,24 @@ graph TD
 
     %% 第一階段：過濾
     subgraph "Phase 1: Semantic Filtering (Hard Filters)"
-        Agent <-->|API Call + Context| ConstraintDB
-        Agent -->|Analyze & OCR| JDs[("Raw JD Files")]
-        Agent -->|Reasoning| Decision{Pass Constraints?}
+        Agent <-->|"API Call + Context"| ConstraintDB
+        Agent -->|"Analyze & OCR"| JDs[("Raw JD Files")]
+        Agent -->|"Reasoning"| Decision{"Pass Constraints?"}
         Decision -- No --> Trash[Discard]
     end
 
     %% 第二階段：分析與建議
     subgraph "Phase 2: Contextual Analysis (Soft Matching)"
         Decision -- Yes --> Analyzer[Analysis Skill]
-        Analyzer <-->|RAG Retrieval| MasterCV
-        Analyzer -->|Map Experience| Context[Structured Insight]
+        Analyzer <-->|"RAG Retrieval"| MasterCV
+        Analyzer -->|"Map Experience"| Context[Structured Insight]
     end
 
     %% 第三階段：輸出
     subgraph "Phase 3: Output & Review"
-        Context -->|Drafting| Writer[Content Generator]
-        Writer -->|Output| Report["Analysis Report &<br/>Draft Suggestions"]
-        Report -->|Final Check| Human["User Review &<br/>Tailor Resume/CV"]
+        Context -->|"Drafting"| Writer[Content Generator]
+        Writer -->|"Output"| Report["Analysis Report &<br/>Draft Suggestions"]
+        Report -->|"Final Check"| Human["User Review &<br/>Tailor Resume/CV"]
     end
 
     style Agent fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
@@ -96,7 +96,7 @@ data/
 │   └── report_b.md       
 └─── history              # Past Applications
     ├── past_JD_a
-│   └── past_JD_b       
+    └── past_JD_b       
 ```
 
 ## 🔮 Future Roadmap: Closed-Loop Learning (V2.0)
