@@ -1,6 +1,6 @@
 # Local LLM Decision Orchestrator: Job Hunting Season
 
-> **Status:** MVP Validated (Local Execution) <br>
+> **Status:** MVP Validated (Local Execution / V1.1) <br>
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
 ## 🎯 Motivation
@@ -19,45 +19,44 @@ This project implements a **Hybrid AI Agent** powered by Google Gemini API, desi
 
 Unlike purely local solutions, this system utilizes the state-of-the-art reasoning capabilities and long-context window of Gemini models to analyze my full background: including technical skills, financial goals, and visa constraints. It acts as an intelligent orchestrator that filters noise and provides strategic application advice, while keeping the core document storage (CVs/Databases) managed locally.
 
-
 ## 🏗️ System Architecture
 
 ```mermaid
 graph TD
     User["User / Researcher"] -->|"1. Input JD Batch<br/>(Text / Screenshots)"| Agent["AI Agent Orchestrator<br/>(Gemini 1.5 Pro - Text & Vision)"]
     
-    %% 資料庫與設定 (Local)
+    %% Local Database & Knowledge
     subgraph "Local Knowledge Base"
-        ConstraintDB[("User Profile DB<br/>(Visa, Tax, Salary)")]
-        MasterCV[("Master CV Database<br/>(Projects & Skills)")]
+        ConstraintDB[("User Profile DB<br/>(AboutMe.md)")]
+        MasterCV[("Master CV & Paper DB<br/>(ChromaDB - RAG)")]
+        HistoryDB[("History Battle DB<br/>(Past JDs & Outcomes)")]
     end
 
-    %% 第一階段：過濾
-    subgraph "Phase 1: Semantic Filtering (Hard Filters)"
-        Agent <-->|"API Call + Context"| ConstraintDB
+    %% Phase 1: Ingestion & Recall
+    subgraph "Phase 1: Ingestion & Recall"
+        Agent <-->|"Load Values"| ConstraintDB
         Agent -->|"Analyze & OCR"| JDs[("Raw JD Files")]
-        Agent -->|"Reasoning"| Decision{"Pass Constraints?"}
-        Decision -- No --> Trash[Discard]
+        Agent <-->|"Semantic Search<br/>(Similarity Check)"| HistoryDB
     end
 
-    %% 第二階段：分析與建議
-    subgraph "Phase 2: Contextual Analysis (Soft Matching)"
-        Decision -- Yes --> Analyzer[Analysis Skill]
-        Analyzer <-->|"RAG Retrieval"| MasterCV
-        Analyzer -->|"Map Experience"| Context[Structured Insight]
+    %% Phase 2: Analysis
+    subgraph "Phase 2: Contextual Analysis"
+        HistoryDB -->|"Recall Lessons"| Agent
+        Agent <-->|"Retrieve Skills"| MasterCV
+        Agent -->|"Gap Analysis &<br/>Risk Assessment"| Insight[Structured Insight]
     end
 
-    %% 第三階段：輸出
-    subgraph "Phase 3: Output & Review"
-        Context -->|"Drafting"| Writer[Content Generator]
-        Writer -->|"Output"| Report["Analysis Report &<br/>Draft Suggestions"]
-        Report -->|"Final Check"| Human["User Review &<br/>Tailor Resume/CV"]
+    %% Phase 3: Output
+    subgraph "Phase 3: Output"
+        Insight -->|"Drafting"| Writer[Content Generator]
+        Writer -->|"Output"| Report["Analysis Report (.md)<br/>& Leaderboard (.csv)"]
     end
 
     style Agent fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
     style ConstraintDB fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
     style MasterCV fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
-    style Human fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
+    style HistoryDB fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
+    style Report fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
 ```
 
 ## 🚀 Key Features
@@ -65,56 +64,50 @@ graph TD
     * Leverages **Google Gemini's** advanced reasoning to understand subtle nuances in JDs (e.g., distinguishing between "required" vs. "nice-to-have" skills), surpassing local models.
 2.  **Multimodal Ingestion with Smart Caching:**
     * **Vision Capabilities:** Capable of processing **non-text inputs** (e.g., screenshots of job posts, scanned PDFs) using Gemini's vision model.
-    * **Cost-Optimized:** Implements a **"Read-Once" policy**. Extracted text is automatically serialized and saved locally (`.txt`). Subsequent runs bypass the expensive vision inference step, retrieving the cached text instantly to reduce API costs and latency.
+    * **Cost-Optimized:** Implements a **"Read-Once" policy**. Extracted text is automatically serialized and saved locally (`.txt`) to reduce API latency.
 3.  **Context-Aware Planning (RAG):**
     * Dynamically retrieves the most relevant project experiences from a local personal database based on the specific requirements of the target position.
-4.  **Hybrid Efficiency:**
-    * Combines the low latency of local vector stores (ChromaDB) with the high-throughput inference of the Gemini API.
+4.  **"War Room" Architecture (V1.1 - Closed-Loop History):**
+    * **Battle Archive:** Automatically indexes the lifecycle of every application (JD + Resume Version + Outcome) into a local vector store.
+    * **Active Recall:** When analyzing a new JD, the agent performs a semantic search against this "Battle Archive."
+    * **Tactical Warning:** If a similar past application is found, the agent proactively retrieves the specific outcome (e.g., "Rejected due to Visa") to warn the user or suggest successful strategies from the past.
 
 ## 🛠️ Tech Stack
 * **Orchestration:** Python, Google Generative AI SDK (Gemini API)
-* **Model:** Gemma-3-27b / Pro
+* **Model:** Gemma-3-12b
 * **Vector Store:** ChromaDB (Using default `all-MiniLM-L6-v2` for local embeddings)
-* **Environment:** Python 3.11
+* **Environment:** Python 3.11 / Docker
 
 ## 📂 Data Structure
 The system automatically manages raw inputs and cached outputs:
 
 ```text
 data/
-├── chroma_db/            # chroma_database (embeddings from all-MiniLM-L6-v2, HNSW)
-├── raw/                  # personal info
-│   ├── personal_info_a.pdf
-│   └── personal_info_b.pdf
-├── jds/                  # Input: Raw files (PDFs, Images, Text)
+├── chroma_db/            # Vector Database (User Profile & History Index)
+├── raw/                  # Personal Knowledge Base
+│   ├── AboutMe.md        # Dynamic User Values (Money, Visa, Location)
+│   └── cv_papers.pdf     # Resume & Academic Papers
+├── jds/                  # Input: New JDs to Analyze
 │   ├── position_A.pdf
-│   └── position_B.pdf
-│   ├── position_A.txt    # OCR Result (Created once, reused forever)
-│   └── position_B.txt    # Parsed Text
-├── reports/              # Analyzed Reports
-│   ├── report_A.md
-│   └── report_b.md       
-└─── history              # Past Applications
-    ├── past_JD_a
-    └── past_JD_b       
+│   └── position_A.txt    # Cached OCR/Text Result
+├── reports/              # Output: Analysis Reports
+│   ├── Analysis_A.md
+│   └── Strategic_Leaderboard.csv      
+└── history/              # Historical Battle Data
+    ├── ongoing/          # Active Applications
+    └── rejected/         # Past Failures (For Post-Mortem Recall)
 ```
 
-## 🔮 Future Roadmap: Closed-Loop Learning (V2.0)
-Currently, the system acts as a static advisor. The V2.0 objective is to implement **Reinforcement Learning from Human Feedback (RLHF)** logic to turn the agent into a dynamic strategist that learns from market responses.
+## 🔮 Future Roadmap: Automated Optimization (V2.0)
+Currently, the system serves as an intelligent advisor that *recalls* history. The V2.0 objective is to implement **Reinforcement Learning (RL)** logic to let the agent *learn* from history independently.
 
-### The "War Room" Architecture
-We plan to introduce a structured history module (`data/history/`) to track the lifecycle of every application:
-1.  **Input:** Past applied JDs + The specific Resume/CV version used.
-2.  **Labeling:** The outcome (e.g., `Auto-Reject`, `Interview`, `Offer`).
-
-### Core V2.0 Capabilities
-* **Strategic Back-Propagation:**
-    * When analyzing a new JD, the agent queries the history database for semantically similar past roles.
-    * *Logic:* "Warning! This position matches the profile of [Company X] where 'CV Version A' was rejected. Suggest pivoting to 'CV Version B' strategy, which secured an interview at [Company Y]."
+### Planned Capabilities
+* **Global Trend Analysis (Beyond One-to-One):**
+    * Instead of just recalling a specific past job, the agent will analyze aggregate data (e.g., "You have an 85% rejection rate when applying to 'FinTech' roles with 'CV Version B'. Stop doing that.")
 * **Automated A/B Testing:**
-    * Systematically tests different "Personas" (e.g., *Pure Researcher* vs. *Applied Engineer*) against different market sectors to identify optimal fit.
+    * Systematically generates two different "Persona Pitches" for similar roles, tracks the callback rate, and automatically updates the `Master CV` strategy weights based on the winner.
 * **ATS Trap Detection:**
-    * Identifies patterns in rejected applications (e.g., specific keywords causing auto-rejects) to flag potential ATS risks in future drafts.
+    * Reverse-engineers the "Black Box" of ATS systems by identifying common keyword patterns in `Auto-Reject` outcomes across different companies.
     
 ---
 *This project is part of a broader research initiative on Agentic AI workflows for Data Synthesis.*

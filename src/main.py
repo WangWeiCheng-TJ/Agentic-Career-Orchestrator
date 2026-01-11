@@ -10,6 +10,7 @@ from termcolor import cprint
 from dotenv import load_dotenv
 from pypdf import PdfReader
 from pathlib import Path
+from utils import gemini_ocr
 
 # --- 配置區 ---
 load_dotenv()
@@ -18,6 +19,7 @@ MODEL_NAME = os.getenv("MODEL_NAME", "gemini-1.5-pro")
 CHROMA_PATH = os.getenv("CHROMA_DB_PATH", "/app/data/chroma_db")
 INPUT_DIR = "/app/data/jds"
 OUTPUT_DIR = "/app/data/reports"
+RAW_DIR = "/app/data/raw"  # [新增] 用來讀 AboutMe.md
 
 # 初始化
 genai.configure(api_key=API_KEY)
@@ -42,23 +44,108 @@ class AgentBrain:
         self.memory = self.chroma_client.get_or_create_collection(name="job_experiences")
         self.shield = PrivacyShield()
 
-    def ocr_image_pdf(self, filepath):
-        cprint(f"   👁️ 啟動 Gemini Vision 進行雲端 OCR...", "magenta")
-        try:
-            sample_file = genai.upload_file(path=filepath, display_name="JD File")
-            while sample_file.state.name == "PROCESSING":
-                time.sleep(1)
-                sample_file = genai.get_file(sample_file.name)
+        # [新增] 啟動時載入 User Values
+        self.user_values = self.load_user_profile()
+
+    def load_user_profile(self):
+        """ [新功能] 從 raw/AboutMe.md 讀取價值觀，而不是寫死在 Code 裡 """
+        profile_path = os.path.join(RAW_DIR, "AboutMe.md")
+        default_values = "- Goal: Find a job.\n- Visa: Need sponsorship."
+        
+        if os.path.exists(profile_path):
+            try:
+                with open(profile_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                    cprint("   👤 已載入個人價值觀 (AboutMe.md)", "cyan")
+                    return content
+            except Exception as e:
+                cprint(f"   ⚠️ 讀取 AboutMe.md 失敗: {e}", "red")
+        else:
+            cprint("   ⚠️ 找不到 AboutMe.md，使用預設值", "yellow")
+        
+        return default_values
+
+    # def ocr_image_pdf(self, filepath):
+    #     cprint(f"   👁️ 啟動 Gemini Vision 進行雲端 OCR...", "magenta")
+    #     try:
+    #         sample_file = genai.upload_file(path=filepath, display_name="JD File")
+    #         while sample_file.state.name == "PROCESSING":
+    #             time.sleep(1)
+    #             sample_file = genai.get_file(sample_file.name)
             
-            prompt = "Extract all text from this document accurately."
-            response = self.model.generate_content([sample_file, prompt])
-            return response.text
-        except Exception as e:
-            cprint(f"   ❌ Cloud OCR 失敗: {e}", "red")
-            return None
+    #         prompt = "Extract all text from this document accurately."
+    #         response = self.model.generate_content([sample_file, prompt])
+    #         return response.text
+    #     except Exception as e:
+    #         cprint(f"   ❌ Cloud OCR 失敗: {e}", "red")
+    #         return None
+
+    def generate_search_query(self, jd_text):
+        """ 用 AI 提取關鍵字 """
+        try:
+            prompt = f"""
+            Find the minimal and preferred requirements from this Job Description.
+            Return ONLY a comma-separated string.
+            JD: {jd_text[:3000]}
+            """
+            response = self.model.generate_content(prompt)
+            return response.text.strip()
+        except:
+            return jd_text[:500]
+
+    def recall_past_lessons(self, jd_text):
+        """ 
+        [修正] 先用 generate_search_query 提取關鍵字，再去搜歷史 JD 
+        """
+        # 1. 取得歷史資料庫 (如果 ingest_history.py 沒跑過，這裡會是空的)
+        history_collection = self.chroma_client.get_or_create_collection(name="past_applications_jds")
+        if history_collection.count() == 0:
+            return "No historical data indexed yet."
+
+        # 2. [關鍵修正] 使用提取出的 Keyword 進行搜尋，而非原始 JD 全文
+        search_query = self.generate_search_query(jd_text)
+        # cprint(f"   🕰️ 歷史檢索關鍵字: {search_query}", "cyan")
+
+        results = history_collection.query(
+            query_texts=[search_query], 
+            n_results=1
+        )
+        
+        lesson_context = "No similar past application found."
+        
+        if results['documents'] and results['documents'][0]:
+            # 這裡簡單判斷距離，實際可調
+            meta = results['metadatas'][0][0]
+            folder_path = meta['folder_path']
+            company_role = meta['company_role']
+            
+            # 嘗試讀取 outcome
+            outcome_text = "Unknown"
+            outcome_files = glob.glob(os.path.join(folder_path, "*outcome*")) + glob.glob(os.path.join(folder_path, "*reject*"))
+            if outcome_files:
+                try:
+                    with open(outcome_files[0], 'r', encoding='utf-8', errors='ignore') as f:
+                        outcome_text = f.read()[:500] # 只讀前500字避免太長
+                        # 未來應該要改成 smart_extract_text
+                except: pass
+
+            lesson_context = f"""
+            *** HISTORY RECALL ALERT ***
+            This new job matches keywords with a past application: '{company_role}'.
+            
+            Path: {folder_path}
+            Past Outcome: {outcome_text}
+            
+            STRATEGIC INSTRUCTION:
+            - If outcome was POSITIVE: Check the resume in that folder for reusable phrasing.
+            - If outcome was NEGATIVE: Analyze the outcome text to avoid repeating mistakes.
+            """
+            
+        return lesson_context
 
     def retrieve_context(self, jd_text, n_results=3):
-        query_text = jd_text[:500] 
+        # 使用關鍵字搜尋個人背景
+        query_text = self.generate_search_query(jd_text)
         results = self.memory.query(query_texts=[query_text], n_results=n_results)
         
         context_str = ""
@@ -69,36 +156,107 @@ class AgentBrain:
                 source = meta.get('source', 'Unknown')
                 sources_list.append(source)
                 context_str += f"\n[Evidence {i+1} from {source}]:\n{doc}\n"
-        
         return context_str, list(set(sources_list))
+    
+    # 在 AgentBrain class 內新增
+    def recall_past_lessons(self, current_jd_text):
+        """
+        搜尋歷史資料庫，看有沒有類似的職缺，並提取當時的策略與結果。
+        """
+        # 1. 連接歷史 JD 資料庫
+        history_collection = self.chroma_client.get_collection(name="past_applications_jds")
+        
+        # 2. 搜尋最像的 1 筆
+        results = history_collection.query(
+            query_texts=[current_jd_text[:1000]], # 用新 JD 的前 1000 字去搜
+            n_results=1
+        )
+        
+        lesson_context = "No similar past application found."
+        
+        if results['documents'] and results['documents'][0]:
+            # 找到相似案例了！
+            similarity_dist = results['distances'][0][0] # 距離越小越像
+            meta = results['metadatas'][0][0]
+            folder_path = meta['folder_path']
+            company_role = meta['company_role']
+            
+            # 設定一個相似度門檻 (視距離算法而定，假設是 L2 distance)
+            # 這裡先假設如果有找到就回傳，讓 LLM 自己判斷像不像
+            
+            # 3. 去那個資料夾挖出當時的 Resume 和 Outcome (如果有)
+            from utils import identify_application_packet, smart_extract_text # 假設你把 extract 搬去 utils 了
+            packet = identify_application_packet(folder_path)
+            
+            outcome_text = "Unknown/Pending"
+            if packet['outcome']:
+                with open(packet['outcome'], 'r', encoding='utf-8', errors='ignore') as f:
+                    outcome_text = f.read()
+            
+            resume_path = packet['resume'] if packet['resume'] else "Unknown"
+
+            lesson_context = f"""
+            *** HISTORY RECALL ALERT ***
+            This new job is highly similar to a past application: '{company_role}'.
+            
+            Path: {folder_path}
+            Past Outcome: {outcome_text}
+            
+            STRATEGIC ADVICE REQUEST:
+            - If the past outcome was POSITIVE (Interview), checking the resume at '{resume_path}' might reveal reusable keywords or phrasing.
+            - If the past outcome was NEGATIVE (Reject), analyze the outcome text above to avoid the same mistake.
+            """
+            
+        return lesson_context
 
     def think(self, jd_text, filename):
         safe_jd = self.shield.sanitize(jd_text)
+        
+        # 1. RAG: 找我的相關經驗
         retrieved_knowledge, sources = self.retrieve_context(safe_jd)
         source_msg = ', '.join(sources) if sources else "None"
 
+        # 2. History RAG: 找類似的戰役
+        history_insight = self.recall_past_lessons(jd_text)
+
+        # 3. [修正] Prompt 強化：讀取外部 AboutMe，並整合 Agent 3/4
         prompt = f"""
         You are a specialized Career Agent. Target Job File: {filename}
         
-        USER CONTEXT (My background):
+        USER CONTEXT (My background from RAG):
         {retrieved_knowledge}
         
-        USER VALUES:
-        - Goal: Financial independence (>125k USD/EUR), Avoid "Box 3" wealth tax traps.
-        - Tech: Prefer "Black Tech" / Optimization / Privacy AI. Hate maintenance of legacy code.
-        - Visa: Needs Visa Sponsorship (Non-EU citizen).
+        USER VALUES (From AboutMe.md):
+        {self.user_values}
 
-        TARGET JOB DESCRIPTION:
+        TARGET JOB DESCRIPTION (JD):
         {safe_jd}
 
-        ---
+        === 🏛️ HISTORICAL BATTLE DATA (Relevant Past Application) ===
+        {history_insight}
+        ===========================================================
+        
         MISSION:
-        1. Analyze this job using the 3-Agent Persona.
-        2. **CRITICAL**: Output a JSON block at the end.
+        1. **Extract & Compare**: Identify top 5 Hard Requirements from the JD and check if "USER CONTEXT" covers them.
+        2. **Persona Analysis**: Analyze using the 3-Agent Persona.
+        3. **Scoring**: Output JSON scoring.
+
+        ### 🔍 GAP ANALYSIS (Requirements vs. My Skills)
+        - List the Top 5 Hard Requirements (Skills/Experience).
+        - For each, verify if "USER CONTEXT" provides evidence.
+        - **Verdict**: [MATCH / GAP / PARTIAL]
 
         ### 🛡️ AGENT 1: BLIND-SPOT RADAR
+        (Hidden costs, tax traps, tech debt scanning)
+
         ### 💀 AGENT 2: DEVIL'S ADVOCATE
+        (Pre-mortem: Why will I get rejected? Why will I hate this job?)
+
         ### ♟️ AGENT 3: THE STRATEGIST
+        - Focus on bridging the Gaps identified above.
+        - **HISTORY CHECK**: specifically look at "HISTORICAL BATTLE DATA".
+          - If we applied to a similar job before (e.g., Company X), tell me explicitly: "Reuse the strategy/intro from [Company X]."
+          - Or warn me: "Last time with [Company X], you failed because of [Reason]. Fix it this time."
 
         ---
         ### 📊 SCORING (JSON Format)
@@ -143,7 +301,7 @@ def smart_extract_text(filepath, agent):
     # --- 判斷是否需要 OCR ---
     if len(text.strip()) < 50 and path.suffix.lower() == '.pdf':
         cprint(f"   ⚠️ 本地提取失敗，切換至 Cloud OCR...", "yellow")
-        text = agent.ocr_image_pdf(filepath)
+        text = gemini_ocr(filepath, model_name=MODEL_NAME)
         
         # --- OCR 成功後，寫入緩存 ---
         if text and len(text) > 50:

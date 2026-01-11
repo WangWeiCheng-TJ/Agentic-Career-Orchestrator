@@ -5,6 +5,15 @@ services:
     volumes:
       - ./src:/app/src      # Hot-reload 程式碼
       - ./data:/app/data    # 持久化數據 (ChromaDB + JDs)
+      # [關鍵修改] 把你的三個實體資料夾，掛載到 Agent 認得的路徑
+      # 1. 資料夾 A (輸入區)：Agent 會掃描這裡來生成報告
+      - ${LOCAL_PATH_TO_JD}:/app/data/jds
+      
+      # 2. 資料夾 B (進行中)：未來 V2 用來參考 "成功/進行中" 的策略
+      - ${LOCAL_PATH_TO_Applied}:/app/data/history/ongoing
+      
+      # 3. 資料夾 C (失敗區)：未來 V2 用來學習 "為什麼被拒絕"
+      - ${LOCAL_PATH_TO_Rejected}:/app/data/history/rejected
     env_file:
       - .env                # 讀取 API Key
     environment:
@@ -20,5 +29,5 @@ services:
               capabilities: [gpu]
     # 注意：雖然這次用 Cloud API，但若未來要跑 Local Embedding 模型，
     # 加上 GPU 支援是好的預留 (需安裝 nvidia-container-toolkit)
-    
+
     command: python src/test.py

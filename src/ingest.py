@@ -4,6 +4,7 @@ import chromadb
 from pypdf import PdfReader
 from termcolor import cprint
 from dotenv import load_dotenv
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # 載入環境變數
 load_dotenv()
@@ -22,16 +23,20 @@ def extract_text_from_pdf(file_path):
         return None
 
 def ingest_data():
-    cprint(f"🚀 開始資料注入流程...", "cyan")
-    cprint(f"📂 掃描目錄: {RAW_DATA_PATH}", "cyan")
-
-    # 1. 連接資料庫
-    # 注意：這裡使用 Chroma 預設的 Embedding 模型 (all-MiniLM-L6-v2)
-    # 它會自動下載並在本地 CPU 執行，完全免費且隱私。
+    cprint(f"🚀 開始資料注入流程 (Recursive Splitter)...", "cyan")
+    
+    # 初始化 ChromaDB
     client = chromadb.PersistentClient(path=CHROMA_PATH)
     collection = client.get_or_create_collection(name="job_experiences")
 
-    # 2. 掃描檔案
+    # 初始化 LangChain 切分器
+    # 邏輯：優先在 \n\n (段落) 切，不行才在 \n (換行) 切，再不行才在空格切
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,
+        chunk_overlap=100,
+        separators=["\n\n", "\n", " ", ""]
+    )
+
     files = glob.glob(os.path.join(RAW_DATA_PATH, "*"))
     documents = []
     metadatas = []
@@ -42,7 +47,6 @@ def ingest_data():
         ext = os.path.splitext(filename)[1].lower()
         
         cprint(f"   📄 處理檔案: {filename}", "white")
-        
         content = ""
         doc_type = "unknown"
 
@@ -54,37 +58,29 @@ def ingest_data():
                 content = f.read()
             doc_type = "notes"
         else:
-            print(f"   ⚠️ 跳過不支援的格式: {filename}")
             continue
 
-        if not content:
-            continue
+        if not content: continue
 
-        # 3. 簡單切分 (Chunking)
-        # 為了 MVP，我們用簡單的字元切分。
-        # 進階版可以用 RecursiveCharacterTextSplitter (LangChain)
-        chunk_size = 1000
-        chunks = [content[i:i+chunk_size] for i in range(0, len(content), chunk_size)]
+        # --- [升級] 使用 Recursive 切分 ---
+        chunks = text_splitter.split_text(content)
 
         for idx, chunk in enumerate(chunks):
             documents.append(chunk)
             metadatas.append({"source": filename, "type": doc_type, "chunk_index": idx})
+            # ID 保持唯一，避免重複寫入
             ids.append(f"{filename}_chunk_{idx}")
 
-    # 4. 寫入資料庫
     if documents:
-        cprint(f"💾 正在寫入 {len(documents)} 筆資料片段到 ChromaDB...", "yellow")
+        cprint(f"💾 正在寫入 {len(documents)} 筆資料片段...", "yellow")
         try:
-            collection.upsert(
-                documents=documents,
-                metadatas=metadatas,
-                ids=ids
-            )
-            cprint(f"✅ 資料注入完成！Collection 總筆數: {collection.count()}", "green")
+            # Upsert: 如果 ID 存在就更新，不存在就新增
+            collection.upsert(documents=documents, metadatas=metadatas, ids=ids)
+            cprint(f"✅ 資料注入完成！資料庫總筆數: {collection.count()}", "green")
         except Exception as e:
             cprint(f"❌ 寫入失敗: {e}", "red")
     else:
-        cprint("⚠️ 沒有發現有效的文字資料。", "yellow")
+        cprint("⚠️ 無有效資料。", "yellow")
 
 if __name__ == "__main__":
     ingest_data()
