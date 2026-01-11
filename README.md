@@ -23,7 +23,7 @@ Unlike purely local solutions, this system utilizes the state-of-the-art reasoni
 
 ```mermaid
 graph TD
-    User["User / Researcher"] -->|"1. Input JD Batch<br/>(Text / Screenshots)"| Agent["AI Agent Orchestrator<br/>(Gemini 1.5 Pro - Text & Vision)"]
+    User["User / Researcher"] -->|"1. Input JD Batch<br/>(Text / Screenshots)"| Agent["AI Agent Orchestrator<br/>(Gemini Free API)"]
     
     %% Local Database & Knowledge
     subgraph "Local Knowledge Base"
