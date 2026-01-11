@@ -1,0 +1,24 @@
+services:
+  orchestrator:
+    build: .
+    container_name: job_orchestrator
+    volumes:
+      - ./src:/app/src      # Hot-reload 程式碼
+      - ./data:/app/data    # 持久化數據 (ChromaDB + JDs)
+    env_file:
+      - .env                # 讀取 API Key
+    environment:
+      - CHROMA_DB_PATH=/app/data/chroma_db
+    # 如果要在 Container 內開發，可以把 command 改成 sleep infinity
+    # command: sleep infinity 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # 注意：雖然這次用 Cloud API，但若未來要跑 Local Embedding 模型，
+    # 加上 GPU 支援是好的預留 (需安裝 nvidia-container-toolkit)
+    
+    command: python src/test.py

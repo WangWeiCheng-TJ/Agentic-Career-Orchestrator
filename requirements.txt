@@ -1,0 +1,25 @@
+# --- Core AI & LLM SDK (Cloud) ---
+# Google Gen AI SDK: 用於連接 Google 的模型 API (支援 Gemini 與 hosted Gemma)
+google-generativeai==0.8.3
+
+# --- Vector Database (Local Persistence) ---
+# ChromaDB: 你的本地長期記憶庫，確保你的 RAG 檢索快速且免費
+chromadb==0.5.15
+
+# --- Data Validation & Structure ---
+# Pydantic: 強制定義 Agent 的輸出結構 (Schema Validation)
+pydantic==2.9.2
+
+# --- Data Processing ---
+# Pandas: 處理 JD 列表 (Excel/CSV)
+pandas==2.2.3
+
+# PyPDF: 解析 PDF 履歷與論文 (必備 Data Ingestion 工具)
+pypdf==5.1.0
+
+# --- Utilities ---
+# Dotenv: 載入 .env 中的 API Key
+python-dotenv==1.0.1
+
+# Termcolor: 讓 CLI 介面顯示清楚的 Pass/Fail 顏色
+termcolor==2.5.0
