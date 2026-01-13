@@ -222,47 +222,59 @@ class AgentBrain:
 
         # 3. [修正] Prompt 強化：讀取外部 AboutMe，並整合 Agent 3/4
         prompt = f"""
-        You are a specialized Career Agent. Target Job File: {filename}
-        
-        USER CONTEXT (My background from RAG):
-        {retrieved_knowledge}
-        
-        USER VALUES (From AboutMe.md):
-        {self.user_values}
+            You are the **Chief Career Strategist** for user.
+            Your goal is not just to "match" keywords, but to calculate the **Return on Investment (ROI)** of applying to this specific job.
 
-        TARGET JOB DESCRIPTION (JD):
-        {safe_jd}
+            ### 📂 INTELLIGENCE BRIEFING
+            1. **CANDIDATE PROFILE (RAG Context)**:
+            {retrieved_knowledge}
 
-        === 🏛️ HISTORICAL BATTLE DATA (Relevant Past Application) ===
-        {history_insight}
-        ===========================================================
-        
-        MISSION:
-        1. **Extract & Compare**: Identify top 5 Hard Requirements from the JD and check if "USER CONTEXT" covers them.
-        2. **Persona Analysis**: Analyze using the 3-Agent Persona.
-        3. **Scoring**: Output JSON scoring.
+            2. **CORE VALUES & CONSTRAINTS (AboutMe)**:
+            {self.user_values}
 
-        ### 🔍 GAP ANALYSIS (Requirements vs. My Skills)
-        - List the Top 5 Hard Requirements (Skills/Experience).
-        - For each, verify if "USER CONTEXT" provides evidence.
-        - **Verdict**: [MATCH / GAP / PARTIAL]
+            3. **TARGET (JD)**:
+            {safe_jd}
 
-        ### 🛡️ AGENT 1: BLIND-SPOT RADAR
-        (Hidden costs, tax traps, tech debt scanning)
+            4. **WAR ROOM ARCHIVE (Past Battle Data)**:
+            {history_insight}
 
-        ### 💀 AGENT 2: DEVIL'S ADVOCATE
-        (Pre-mortem: Why will I get rejected? Why will I hate this job?)
+            ---
 
-        ### ♟️ AGENT 3: THE STRATEGIST
-        - Focus on bridging the Gaps identified above.
-        - **HISTORY CHECK**: specifically look at "HISTORICAL BATTLE DATA".
-          - If we applied to a similar job before (e.g., Company X), tell me explicitly: "Reuse the strategy/intro from [Company X]."
-          - Or warn me: "Last time with [Company X], you failed because of [Reason]. Fix it this time."
+            ### ⚔️ MISSION OBJECTIVES
+            Perform a deep strategic analysis using the following modules. Be **critical, concise, and direct**.
 
-        ---
-        ### 📊 SCORING (JSON Format)
-        Provide valid JSON inside ```json``` tags.
-        Keys: "company_name", "role_name", "match_score" (0-100), "risk_level" (Low/Medium/High), "salary_potential", "visa_friendly", "one_line_summary".
+            #### 🔍 MODULE 1: REALITY CHECK (The Gatekeeper)
+            - Identify the **Requirements** and **preference** from the JD.
+            - For each, provide a **Verdict**: [✅ STRONG MATCH] / [⚠️ BRIDGING NEEDED] / [❌ CRITICAL GAP].
+            - **CRITICAL:** If there is a [❌ CRITICAL GAP], propose a **"Pivot Strategy"**: How can he use his past work to distract/compensate for this missing skill?
+
+            #### 🛡️ MODULE 2: RISK RADAR (The Cynic)
+            - **Financial/Visa Trap**: Based on his "Green/Red Zone" preferences, is this job in a tax-heavy region (e.g., Netherlands Box 3) or visa-unfriendly?
+            - **R&D vs. Ops Balance**: The candidate is research-oriented. Does this JD look like a pure "Ops/Support/Maintenance" role with zero innovation?
+            - ⚠️ **Warning**: If the JD emphasizes "24/7 support", "legacy migration", or "ticket handling" over "model development" or "experimentation".
+
+            #### ♟️ MODULE 3: THE BATTLE PLAN (The Strategist)
+            - **HISTORY INTEL**: Analyze the `WAR ROOM ARCHIVE`.
+                - If we applied to a similar role/company before and *failed*, explicitly state: **"⚠️ WARNING: Last time at [Company], we failed due to [Reason]. Do NOT repeat [Action]."**
+                - If we had success/interviews, state: **"✅ BLUEPRINT: Reuse the [Specific Story] from the [Company] application."**
+            - **The "Hook"**: Draft **ONE** killer sentence for the Cover Letter opening that connects his "Lab-to-Street" philosophy directly to their company mission.
+
+            ---
+
+            ### 📊 OUTPUT FORMAT (Strict JSON)
+            Generate a JSON object inside ```json``` tags. Do not output any text outside the tags.
+
+            {{
+            "company_name": "Extract from JD",
+            "role_name": "Extract from JD",
+            "match_score": (Integer 0-100, be strict. Deduct for Visa risks.),
+            "risk_level": "Low" | "Medium" | "High",
+            "salary_potential": "Unknown" | "High" | "Low" (Guess based on location/tier),
+            "visa_friendly": true | false (Infer from context),
+            "critical_gaps": ["List top gaps"],
+            "strategic_advice": "One sentence summary of whether to apply and how.",
+            "history_alert": "None" | "Specific warning from War Room"
+            }}
         """
 
         response = self.model.generate_content(prompt)
