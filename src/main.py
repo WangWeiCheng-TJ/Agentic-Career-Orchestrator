@@ -257,8 +257,7 @@ class AgentBrain:
             - **HISTORY INTEL**: Analyze the `WAR ROOM ARCHIVE`.
                 - If we applied to a similar role/company before and *failed*, explicitly state: **"⚠️ WARNING: Last time at [Company], we failed due to [Reason]. Do NOT repeat [Action]."**
                 - If we had success/interviews, state: **"✅ BLUEPRINT: Reuse the [Specific Story] from the [Company] application."**
-            - **The "Hook"**: Draft **ONE** killer sentence for the Cover Letter opening that connects his "Lab-to-Street" philosophy directly to their company mission.
-
+            - **STRATEGIC FIT**: Given his core values, propose a one-line strategic summary: **"Is this job worth applying to? Why/Why not?"**
             ---
 
             ### 📊 OUTPUT FORMAT (Strict JSON)
