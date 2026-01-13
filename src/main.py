@@ -260,7 +260,11 @@ class AgentBrain:
             - **STRATEGIC FIT**: Given his core values, propose a one-line strategic summary: **"Is this job worth applying to? Why/Why not?"**
             ---
 
-            ### 📊 OUTPUT FORMAT (Strict JSON)
+            ### 📊 OUTPUT FORMAT
+            First provide your final analysis in markdown format. 
+            Consider the most comprehensive view possible.
+            
+            Then, at the end, provide a JSON object with the following fields exactly as specified:
             Generate a JSON object inside ```json``` tags. Do not output any text outside the tags.
 
             {{
