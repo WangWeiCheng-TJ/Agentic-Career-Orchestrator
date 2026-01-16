@@ -27,7 +27,7 @@ This project implements a Multi-Agent RAG Orchestrator powered by Google Gemini,
 Unlike monolithic approaches that rely on a single prompt to "analyze these JDs," this system decomposes the complex decision-making process into a pipeline of specialized agents. It leverages the reasoning capabilities of Gemini to process fragmented context: matching technical skills, research alignment, and hard constraints against individual job descriptions with high precision.
 
 ### 🚀 System Evolution: From V1 to V2.1
-While V1.0 (Monolithic Orchestrator) follows a predefined routine to analyze JDs, V2.1 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
+While V1 follows a predefined routine to analyze JDs, V2.1 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
 
 The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy."
 
@@ -36,7 +36,7 @@ The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy.
    - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
    - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
 
-#### V2.1 (Current): An Active "Strategic Commander"" 
+#### V2.1 (Current): An Active "Strategic Commander
 This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
    - **Reason (Dynamic Mixture of Experts (MoE))**:<br> Introduces a Router Agent that dynamically assembles an Expert Council based on the JD's nature. e.g. A " Senior Research Scientist" role triggers the Academic Analyst (evaluating research alignment), Manager (evaluating soft skills).
    - **Perceive (Tool-Augmented)**: <br> Breaks the "internal bubble" by autonomously verifying salaries and retrieving relevant arXiv papers to ground analysis in reality.
@@ -191,11 +191,11 @@ Start the Docker container in detached mode: ```docker-compose up -d --build```
 
 4. Memory Injection (Initialization)
 
-    **Phase 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
+    **Step 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
     * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/ingest.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingest_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
 
-    **Phase 2**: The Hunt (Routine) <br>
+    **Step 2**: The Hunt (Routine) <br>
     Execute this loop when adding new JDs.
     * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
     * Hunt: Run the main orchestrator.<br> ```docker-compose run --rm orchestrator python src/main.py``` 
@@ -203,7 +203,7 @@ Start the Docker container in detached mode: ```docker-compose up -d --build```
         * ```Strategic_Leaderboard.csv```: Prioritize applications.
         * ```Analysis_*.md```: Read detailed strategy & warnings.
 
-    **Phase 3**: Post-Battle Maintenance<br> When you receive an outcome (Reject/Interview):
+    **Step 3**: Post-Battle Maintenance<br> When you receive an outcome (Reject/Interview):
     * Move the JD folder from Ongoing to Rejected (on your local drive).
     * Add an ```result.txt``` or ```reject_letter.txt``` inside the folder.
     * Run Ingest History again to update the agent's memory:<br>```docker-compose run --rm orchestrator python src/ingest_history.py```
