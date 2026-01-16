@@ -26,10 +26,10 @@ This project implements a **Hybrid AI Agent** powered by Google Gemini API, desi
 Unlike purely local solutions, this system utilizes the **reasoning capabilities** and **long-context window** of Gemini models to analyze the full applicant background: including technical skills, financial goals, and visa constraints. It acts as an intelligent orchestrator that filters noise and provides strategic application advice. 
 
 Moving beyond simple analysis, **V2.0** introduces:
-- 🔧 **Tool Use** for external grounding (Salary checks / arXiv publication search)
-- 🧠 **Reflective ROI Planning** for cross-JD comparison and resource allocation
-- 👥 **Mixture of Experts (MoE)** for section-specific resume optimization guidance
-- 🎯 **Autonomous Actions** for priority-based file organization
+- [x] **Tool Use** for external grounding ( salary checks / arXiv publication search)
+- [ ] **Reflective ROI Planning** for cross-JD comparison and resource allocation
+- [ ] **Mixture of Experts (MoE)** for section-specific resume optimization guidance
+- [ ] **Autonomous Actions** for priority-based file organization
 
 All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
 

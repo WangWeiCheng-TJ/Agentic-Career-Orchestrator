@@ -12,6 +12,7 @@ from pypdf import PdfReader
 from pathlib import Path
 from utils import gemini_ocr
 from utils import identify_application_packet
+from agents.jd_parser import JDParserAgent
 
 # --- 配置區 ---
 load_dotenv()
@@ -48,8 +49,12 @@ class AgentBrain:
         # [新增] 啟動時載入 User Values
         self.user_values = self.load_user_profile()
 
+        # [V2 新增] 初始化 Agentic 元件
+        cprint("   🤖 初始化 V2 Agents (Parser & Tools)...", "magenta")
+        self.jd_parser = JDParserAgent(self.model) # 負責讀懂 JD
+        self.tools = ToolRegistry()                # 負責上網查資料
+
     def load_user_profile(self):
-        """ [新功能] 從 raw/AboutMe.md 讀取價值觀，而不是寫死在 Code 裡 """
         profile_path = os.path.join(RAW_DIR, "AboutMe.md")
         default_values = "- Goal: Find a job.\n- Visa: Need sponsorship."
         
@@ -66,20 +71,6 @@ class AgentBrain:
         
         return default_values
 
-    # def ocr_image_pdf(self, filepath):
-    #     cprint(f"   👁️ 啟動 Gemini Vision 進行雲端 OCR...", "magenta")
-    #     try:
-    #         sample_file = genai.upload_file(path=filepath, display_name="JD File")
-    #         while sample_file.state.name == "PROCESSING":
-    #             time.sleep(1)
-    #             sample_file = genai.get_file(sample_file.name)
-            
-    #         prompt = "Extract all text from this document accurately."
-    #         response = self.model.generate_content([sample_file, prompt])
-    #         return response.text
-    #     except Exception as e:
-    #         cprint(f"   ❌ Cloud OCR 失敗: {e}", "red")
-    #         return None
 
     def generate_search_query(self, jd_text):
         """ 用 AI 提取關鍵字 """
@@ -93,56 +84,6 @@ class AgentBrain:
             return response.text.strip()
         except:
             return jd_text[:500]
-
-    def recall_past_lessons(self, jd_text):
-        """ 
-        [修正] 先用 generate_search_query 提取關鍵字，再去搜歷史 JD 
-        """
-        # 1. 取得歷史資料庫 (如果 ingest_history.py 沒跑過，這裡會是空的)
-        history_collection = self.chroma_client.get_or_create_collection(name="past_applications_jds")
-        if history_collection.count() == 0:
-            return "No historical data indexed yet."
-
-        # 2. [關鍵修正] 使用提取出的 Keyword 進行搜尋，而非原始 JD 全文
-        search_query = self.generate_search_query(jd_text)
-        # cprint(f"   🕰️ 歷史檢索關鍵字: {search_query}", "cyan")
-
-        results = history_collection.query(
-            query_texts=[search_query], 
-            n_results=1
-        )
-        
-        lesson_context = "No similar past application found."
-        
-        if results['documents'] and results['documents'][0]:
-            # 這裡簡單判斷距離，實際可調
-            meta = results['metadatas'][0][0]
-            folder_path = meta['folder_path']
-            company_role = meta['company_role']
-            
-            # 嘗試讀取 outcome
-            outcome_text = "Unknown"
-            outcome_files = glob.glob(os.path.join(folder_path, "*outcome*")) + glob.glob(os.path.join(folder_path, "*reject*"))
-            if outcome_files:
-                try:
-                    with open(outcome_files[0], 'r', encoding='utf-8', errors='ignore') as f:
-                        outcome_text = f.read()[:500] # 只讀前500字避免太長
-                        # 未來應該要改成 smart_extract_text
-                except: pass
-
-            lesson_context = f"""
-            *** HISTORY RECALL ALERT ***
-            This new job matches keywords with a past application: '{company_role}'.
-            
-            Path: {folder_path}
-            Past Outcome: {outcome_text}
-            
-            STRATEGIC INSTRUCTION:
-            - If outcome was POSITIVE: Check the resume in that folder for reusable phrasing.
-            - If outcome was NEGATIVE: Analyze the outcome text to avoid repeating mistakes.
-            """
-            
-        return lesson_context
 
     def retrieve_context(self, jd_text, n_results=3):
         # 使用關鍵字搜尋個人背景
@@ -159,46 +100,46 @@ class AgentBrain:
                 context_str += f"\n[Evidence {i+1} from {source}]:\n{doc}\n"
         return context_str, list(set(sources_list))
     
-    # 在 AgentBrain class 內新增
     def recall_past_lessons(self, current_jd_text):
         """
-        搜尋歷史資料庫，看有沒有類似的職缺，並提取當時的策略與結果。
+        [修正版] 整合了關鍵字搜尋 (較準) 與 Packet 解析 (較細)
         """
         # 1. 連接歷史 JD 資料庫
-        history_collection = self.chroma_client.get_collection(name="past_applications_jds")
+        history_collection = self.chroma_client.get_or_create_collection(name="past_applications_jds")
+        if history_collection.count() == 0:
+            return "No historical data indexed yet."
+
+        # 2. [優化] 使用 generate_search_query 提取關鍵字來搜尋 (比直接用全文準)
+        search_query = self.generate_search_query(current_jd_text)
         
-        # 2. 搜尋最像的 1 筆
         results = history_collection.query(
-            query_texts=[current_jd_text[:1000]], # 用新 JD 的前 1000 字去搜
+            query_texts=[search_query], 
             n_results=1
         )
         
         lesson_context = "No similar past application found."
         
         if results['documents'] and results['documents'][0]:
-            # 找到相似案例了！
-            similarity_dist = results['distances'][0][0] # 距離越小越像
+            # 找到相似案例
             meta = results['metadatas'][0][0]
             folder_path = meta['folder_path']
             company_role = meta['company_role']
             
-            # 設定一個相似度門檻 (視距離算法而定，假設是 L2 distance)
-            # 這裡先假設如果有找到就回傳，讓 LLM 自己判斷像不像
-            
-            # 3. 去那個資料夾挖出當時的 Resume 和 Outcome (如果有)
-            
+            # 3. 使用 Packet 邏輯挖出當時的 Resume 和 Outcome
             packet = identify_application_packet(folder_path)
             
             outcome_text = "Unknown/Pending"
             if packet['outcome']:
-                with open(packet['outcome'], 'r', encoding='utf-8', errors='ignore') as f:
-                    outcome_text = f.read()
+                try:
+                    with open(packet['outcome'], 'r', encoding='utf-8', errors='ignore') as f:
+                        outcome_text = f.read()[:500] # 限制長度
+                except: pass
             
             resume_path = packet['resume'] if packet['resume'] else "Unknown"
 
             lesson_context = f"""
             *** HISTORY RECALL ALERT ***
-            This new job is highly similar to a past application: '{company_role}'.
+            This new job matches keywords with a past application: '{company_role}'.
             
             Path: {folder_path}
             Past Outcome: {outcome_text}
@@ -220,23 +161,39 @@ class AgentBrain:
         # 2. History RAG: 找類似的戰役
         history_insight = self.recall_past_lessons(jd_text)
 
-        # 3. [修正] Prompt 強化：讀取外部 AboutMe，並整合 Agent 3/4
+        # ================= [V2 新增核心邏輯 START] =================
+        cprint(f"   🕵️ V2 Agent 正在進行深度偵查...", "cyan")
+        
+        # 3.1 解析 JD 參數 (Parser Agent)
+        # 用 LLM 提取公司名、職稱、關鍵字，比 Regex 更準
+        jd_params = self.jd_parser.parse(jd_text)
+        cprint(f"     -> 識別目標: {jd_params.get('company')} / {jd_params.get('role')}", "blue")
+
+        # 3.2 執行外部工具 (Tool Use)
+        # 去查 ArXiv 和 真實薪水
+        external_intel = self.tools.run_tools(jd_params)
+        # ================= [V2 新增核心邏輯 END] ===================
+
+        # 4. Prompt 強化：把 external_intel 塞進去
         prompt = f"""
-            You are the **Chief Career Strategist** for user.
-            Your goal is not just to "match" keywords, but to calculate the **Return on Investment (ROI)** of applying to this specific job.
+            You are the **Chief Career Strategist**.
+            Calculate ROI and decide strategy.
 
             ### 📂 INTELLIGENCE BRIEFING
             1. **CANDIDATE PROFILE (RAG Context)**:
             {retrieved_knowledge}
 
-            2. **CORE VALUES & CONSTRAINTS (AboutMe)**:
+            2. **CORE VALUES & CONSTRAINTS**:
             {self.user_values}
 
             3. **TARGET (JD)**:
             {safe_jd}
 
-            4. **WAR ROOM ARCHIVE (Past Battle Data)**:
+            4. **WAR ROOM ARCHIVE (Past Battles)**:
             {history_insight}
+
+            5. **🌍 REAL-TIME MARKET INTELLIGENCE (Agent Gathered)**:
+            {external_intel}
 
             ---
 
@@ -248,7 +205,9 @@ class AgentBrain:
             - For each, provide a **Verdict**: [✅ STRONG MATCH] / [⚠️ BRIDGING NEEDED] / [❌ CRITICAL GAP].
             - **CRITICAL:** If there is a [❌ CRITICAL GAP], propose a **"Pivot Strategy"**: How can he use his past work to distract/compensate for this missing skill?
 
-            #### 🛡️ MODULE 2: RISK RADAR (The Cynic)
+            #### 🛡️ MODULE 2: RISK RADAR
+            - **Salary/Market Check**: Use the Market Intelligence above. Is the salary fair?
+            - **Research Vitality**: Check the 'ArXiv Results' in Market Intelligence. Is this team active in research?
             - **Financial/Visa Trap**: Based on his "Green/Red Zone" preferences, is this job in a tax-heavy region (e.g., Netherlands Box 3) or visa-unfriendly?
             - **R&D vs. Ops Balance**: The candidate is research-oriented. Does this JD look like a pure "Ops/Support/Maintenance" role with zero innovation?
             - ⚠️ **Warning**: If the JD emphasizes "24/7 support", "legacy migration", or "ticket handling" over "model development" or "experimentation".
