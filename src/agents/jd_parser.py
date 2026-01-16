@@ -1,50 +1,71 @@
-import json
-import re
-from termcolor import cprint
+import sys
+import os
+
+# 確保引用路徑正確
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+from src.utils import safe_generate_json
 
 class JDParserAgent:
     def __init__(self, model):
         self.model = model
 
-    def parse(self, jd_text: str) -> dict:
+    def parse(self, jd_text: str, filename: str = "Unknown") -> dict:
         """
-        分析 JD 文字，提取出工具需要的參數。
+        Phase 1 Scout 的核心大腦。
+        負責從雜亂的 JD 文字中，提取出結構化的情報。
         """
-        # 移除 [:3000] 的限制！讓 Gemini 讀整份文件！
-        # 就算 JD 有 100 頁 PDF，Gemini 1.5 Pro 也吃得下。
         
+        # 定義我們要提取的資料結構
         prompt = f"""
-        You are a Data Extraction Specialist.
-        Extract the following metadata from the Job Description.
+        You are an elite Headhunter and Resume Strategist.
+        Analyze the following Job Description (JD) to extract critical intelligence.
         
-        RETURN JSON ONLY. No markdown formatting, no code blocks.
+        Source File: {filename}
         
-        Fields:
-        1. "role": The exact job title.
-        2. "company": The hiring company name.
-        3. "location": City/Country (default "US" if not found).
-        4. "keywords": A list of 3-5 specific technical keywords for identifying the specific team/lab (e.g., "Large Language Models", "Computer Vision").
+        ### JD CONTENT (Truncated):
+        {jd_text[:15000]} 
         
-        JD Text:
-        {jd_text}  <-- 這裡是完整的全文
+        ### EXTRACTION TASKS
+        1. **Basic Info**: Extract Role, Company, Location.
+        2. **Experience Level**: Classify the seniority of the role based on Title and Years of Experience.
+           - **STRICT BUCKETS**: "Intern", "Junior" (0-2y), "Mid" (2-5y), "Senior" (5-8y), "Staff/Lead" (8y+), "Principal/Executive".
+           - *Note: If the title contains 'Staff', 'Principal', or 'Director', classify accordingly.*
+        3. **Salary Context**: Does it mention a salary range? (Extract raw text or null).
+        4. **Key Tech Stack**: List top 5-7 hard skills (e.g., "PyTorch", "Kubernetes").
+        5. **Search Keywords**: Generate 3 specific keywords to search for recent papers/news (e.g., "Generative AI", "Edge Computing").
+        6. **Domain Label**: Classify into one bucket (e.g., "CV", "NLP", "Infra", "Backend").
+        
+        ### OUTPUT JSON FORMAT ONLY
+        {{
+            "role": "Senior Computer Vision Engineer",
+            "company": "NVIDIA",
+            "location": "Santa Clara, CA (or Remote)",
+            "experience_level": "Senior", 
+            "salary_raw": "$180k - $250k" or null,
+            "tech_stack": ["CUDA", "TensorRT", "C++", "Python", "PyTorch"],
+            "search_keywords": ["Model Quantization", "Autonomous Driving", "Vision Transformers"],
+            "domain": "Computer Vision",
+            "summary": "One sentence summary of the role's core responsibility."
+        }}
         """
 
-        try:
-            response = self.model.generate_content(prompt)
-            text = response.text.strip()
-            
-            # 清理 JSON
-            text = re.sub(r"```json", "", text)
-            text = re.sub(r"```", "", text).strip()
-            
-            data = json.loads(text)
-            return data
-            
-        except Exception as e:
-            cprint(f"   ⚠️ JD Parser 解析失敗: {e}", "yellow")
-            return {
-                "role": "Engineer",
-                "company": "Unknown Company",
-                "location": "Remote",
-                "keywords": []
-            }
+        # 設定預設值 (萬一 LLM 炸開，至少程式不會停)
+        default_output = {
+            "role": "Unknown Role",
+            "company": "Unknown Company",
+            "location": "Unknown",
+            "experience_level": "Unknown", # [新增] 用於 Phase 2 過濾
+            "salary_raw": None,
+            "tech_stack": [],
+            "search_keywords": [],
+            "domain": "General",
+            "summary": "Parser failed to extract data."
+        }
+
+        # 使用我們寫好的防呆工具
+        return safe_generate_json(
+            model=self.model,
+            prompt=prompt,
+            retries=3,
+            default_output=default_output
+        )

@@ -58,12 +58,19 @@ graph TD
     %% LEVEL 0: 履歷軍火庫 (The Arsenal)
     %% 這是獨立運作的預處理流程
     %% ==========================================
-    subgraph "Level 0: Resume Pre-processing"
-        ResPDFs["📄 My Resume PDFs"] --> Indexer["🤖 Indexer Agent"]
+    subgraph "Level 0: Pre-processing"
+        ResPDFs["📄 My Resume PDFs"] --> IndexerCV["🤖 Indexer Agent"]
         
-        Indexer -->|"AI Tagging<br/>(#Privacy, #Vision)"| DB_Entry["Indexed Data"]
-        DB_Entry --> ResumeDB[("🗄️ Resume Vector DB<br/>(Chroma)")]
+        IndexerCV -->|"AI Tagging<br/>(#Privacy, #Vision)"| DB_Entry_CV["Indexed CV"]
+        DB_Entry_CV --> ResumeDB[("🗄️ Resume Vector DB<br/>(Chroma)")]
+
+        AllFiles["📄 Knowledge About Me"] --> IndexerPK["🤖 Indexer Agent"]
+        
+        IndexerPK -->|"AI Tagging<br/>(#Privacy, #Vision)"| DB_Entry_PK["Indexed Data"]
+        DB_Entry_PK --> PersonalDB[("🗄️ Personal Vector DB<br/>(Chroma)")]
     end
+
+    
     
     %% ==========================================
     %% Phase 1: 戰場情報 (Intelligence)
@@ -81,6 +88,7 @@ graph TD
     %% ==========================================
     subgraph "Phase 2: Intelligent Triage"
         Dossier --> Triage["🏥 Triage Agent"]
+        PersonalDB -.-> Triage["🏥 Triage Agent"]
         
         Triage -- "Hard Constraints Check<br/>(Visa/PhD)" --> RejectLog["📝 Rejected_Log.json<br/>(Brief Reason)"]
         RejectLog --> Bin["📂 /99_Trash"]
@@ -132,6 +140,8 @@ graph TD
     %% ==========================================
     subgraph "Phase 5: Campaign Output"
         BriefingAgent -->|"Cluster Context"| Advisor["👨‍🔬 Expert (Advisor Mode)"]
+        PersonalDB -.->|"Personal Knowledge"| Advisor["👨‍🔬 Expert (Advisor Mode)"]
+        ResumeDB -.->|"Past Resume"| Advisor["👨‍🔬 Expert (Advisor Mode)"]
         
         Advisor --> OutputA["📂 /01_Campaign_Privacy<br/>- 📄 Strategy_Guide.md (Advice: Insert X objective in project A)<br/>- 📂 10 Target JDs"]
         Advisor --> OutputB["📂 /02_Campaign_Infra<br/>..."]
@@ -192,7 +202,7 @@ Start the Docker container in detached mode: ```docker-compose up -d --build```
 4. Memory Injection (Initialization)
 
     **Step 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
-    * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/ingest.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
+    * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/data/ingest.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingest_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
 
     **Step 2**: The Hunt (Routine) <br>
