@@ -1,18 +1,19 @@
 # Job Hunting Season 2: Agentic Career Orchestrator 
 #### An ROI-Driven Multi-Agent System
-> **Current Status:** V2.0 Design Phase (Architecture Validated / Implementation In Progress)
+> **Current Status:** V2.1 Design Phase (Architecture Validated / Implementation In Progress)
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
 ## 🎯 Motivation
 
-The primary motivation behind this project is to address the inefficiency of manually filtering noise from job descriptions in the job market.
+The primary motivation behind this project is to solve the extremely low signal-to-noise ratio in the current job market and the unsustainable time cost of high-quality applications.
 
-In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer". 
+In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer". Manually parsing hundreds of JDs to find the few that align with specific constraints (e.g., Privacy-Preserving AI, European Visa sponsorship) is a exhausting process that is an inefficient process that drains cognitive resources.
 
-Furthermore, effective job hunting requires more than just reading; it demands **verification** (checking market salary, validating research alignment), **reflection** (comparing against past applications to avoid repeated mistakes), and **strategic execution** (prioritizing high-ROI opportunities and allocating effort efficiently). These are processes that are computationally exhausting.
+Furthermore, effective job hunting requires more than just reading; it demands **verification** (checking market salary, validating research alignment), **reflection** (comparing against past applications to avoid repeated mistakes), and **strategic execution** (prioritizing high-ROI opportunities and allocating effort efficiently). 
 
 
-This project was built to validate that a Local LLM Agent can serve as an **autonomous decision orchestrator** to solve this "needle in a haystack" problem while preserving data privacy.
+This project is to build an ROI-Driven Agentic System that automates the "low-level filtering" and "strategic intelligence gathering." This ensures that the human candidate can allocate their limited bandwidth exclusively to high-leverage opportunities, shifting focus from searching to crafting the perfect application.
+
 
 **Research Context:**  
 This project also serves as the architectural pilot for **Real-World Data-Driven Synthetic Surveillance Dataset Generation Pipeline**. By treating video generation models and task-specific LoRAs as "Agents," the future research aims to leverage this same agentic workflow to significantly improve efficiency and reduce computational costs in synthetic data generation.
@@ -21,138 +22,161 @@ This project also serves as the architectural pilot for **Real-World Data-Driven
 
 ## 📖 Introduction
 
-This project implements a **Hybrid AI Agent** powered by Google Gemini API, designed to leverage extensive user context to identify job descriptions that best align with the user's expertise and constraints.
+This project implements a Multi-Agent RAG Orchestrator powered by Google Gemini, designed to transform job hunting from a brute-force search into a strategic campaign.
 
-Unlike purely local solutions, this system utilizes the **reasoning capabilities** and **long-context window** of Gemini models to analyze the full applicant background: including technical skills, financial goals, and visa constraints. It acts as an intelligent orchestrator that filters noise and provides strategic application advice. 
+Unlike monolithic approaches that rely on a single prompt to "analyze these JDs," this system decomposes the complex decision-making process into a pipeline of specialized agents. It leverages the reasoning capabilities of Gemini to process fragmented context: matching technical skills, research alignment, and hard constraints against individual job descriptions with high precision.
 
-Moving beyond simple analysis, **V2.0** introduces:
-- [x] **Tool Use** for external grounding ( salary checks / arXiv publication search)
-- [ ] **Reflective ROI Planning** for cross-JD comparison and resource allocation
-- [ ] **Mixture of Experts (MoE)** for section-specific resume optimization guidance
-- [ ] **Autonomous Actions** for priority-based file organization
+### 🚀 System Evolution: From V1 to V2.1
+While V1.0 (Monolithic Orchestrator) follows a predefined routine to analyze JDs, V2.1 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
+
+The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy."
+
+#### V1 (Legacy): A Rigid "Smart Filter"
+   - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
+   - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
+   - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
+
+#### V2.1 (Current): An Active "Strategic Commander"" 
+This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
+   - **Reason (Dynamic Mixture of Experts (MoE))**:<br> Introduces a Router Agent that dynamically assembles an Expert Council based on the JD's nature. e.g. A " Senior Research Scientist" role triggers the Academic Analyst (evaluating research alignment), Manager (evaluating soft skills).
+   - **Perceive (Tool-Augmented)**: <br> Breaks the "internal bubble" by autonomously verifying salaries and retrieving relevant arXiv papers to ground analysis in reality.
+   - **Plan (MoE Advisory)**: <br>Replaces generic feedback with specific Battle Plans (e.g., "Fixing this gap unlocks 15 positions"), utilizing a Mixture of Experts approach.
+   - **Act (Hard-Triage)**: <br>Actively rejects non-viable roles (Visa/PhD constraints) before wasting human attention.
+   
 
 All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
 
 ---
-### System Evolution: V1.1 → V2.0
 
-**V1.1 (Current Implementation):**
-- ✅ Semantic filtering via RAG (Retrieval-Augmented Generation)
-- ✅ Historical learning via "War Room" memory (past application outcomes)
-- ✅ Multi-criteria analysis (skills, visa, location)
-- ❌ Limited to internal knowledge (no external validation)
-- ❌ Treats each JD independently (no cross-document comparison)
-
-**V2.0 (Ongoing Architecture):**
-- **Tool-Augmented Intelligence**: External verification via salary checks and publication searches
-- **Global Reflection**: Cross-JD comparison with ROI-based prioritization
-- **Expert Advisory System**: MoE-based strategic recommendations (NOT auto-generation)
-- **Autonomous Action**: Automated file organization based on final scores
-
-This upgrade transforms the system from a passive analyzer to an active decision orchestrator, capable of:
-1. **Perceiving** job markets through external tools
-2. **Reasoning** about relative priorities across multiple opportunities
-3. **Planning** resource allocation based on ROI calculations
-4. **Acting** on decisions through file system operations
 
 
 ## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    User["User Input<br/>(Batch JDs)"] --> Scouter["Phase 1: Intelligence Agent<br/>(The Scout)"]
-
-    %% Phase 1: 盡職調查 (先查再說)
+   %% ==========================================
+    %% LEVEL 0: 履歷軍火庫 (The Arsenal)
+    %% 這是獨立運作的預處理流程
+    %% ==========================================
+    subgraph "Level 0: Resume Pre-processing"
+        ResPDFs["📄 My Resume PDFs"] --> Indexer["🤖 Indexer Agent"]
+        
+        Indexer -->|"AI Tagging<br/>(#Privacy, #Vision)"| DB_Entry["Indexed Data"]
+        DB_Entry --> ResumeDB[("🗄️ Resume Vector DB<br/>(Chroma)")]
+    end
+    
+    %% ==========================================
+    %% Phase 1: 戰場情報 (Intelligence)
+    %% ==========================================
     subgraph "Phase 1: Intelligence Gathering"
-        Scouter -->|"1. Parse JD"| JD_Content
-        Scouter -->|"2. External Check"| Tools["Tools<br/>(Salary + arXiv)"]
-        Scouter -->|"3. Internal Recall"| RAG["RAG Memory<br/>(Past Applications)"]
+        JDs["📂 JD Batch"] --> Parser["JD Parser"]
+        Parser --> RawText[("📄 Raw Text")]
+        RawText --> Tools["🌍 External Tools"]
         
-        JD_Content & Tools & RAG --> Context["General Context Report"]
+        RawText & Tools --> Dossier["🗂️ Enriched Dossier"]
     end
 
-    %% Phase 2: 反思與 ROI (大腦核心)
-    subgraph "Phase 2: Strategic Reflection"
-        Context --> Reflector["Reflector Agent<br/>(The Strategist)"]
-        Reflector -->|"Prioritize JDs"| Logic["ROI Calculation<br>Input: Rewrite_Effort, Match_Score, MisMatch_Score"]
+    %% ==========================================
+    %% Phase 2: 檢傷分類 (Triage)
+    %% ==========================================
+    subgraph "Phase 2: Intelligent Triage"
+        Dossier --> Triage["🏥 Triage Agent"]
         
-        Logic --> Decision{ROI High?}
+        Triage -- "Hard Constraints Check<br/>(Visa/PhD)" --> RejectLog["📝 Rejected_Log.json<br/>(Brief Reason)"]
+        RejectLog --> Bin["📂 /99_Trash"]
+        
+        Triage -- "✅ Pass" --> Metadata["Metadata<br/>(Role/Domain)"]
     end
 
-    %% 分流：低分 -> 解釋原因 -> 歸檔
-    Decision -- "No (Low ROI)" --> LogReject["Gen. Rejection Log<br/>(Why is ROI low?)"]
-    LogReject --> FolderLow["Action: Move to<br/>/03_Ignore"]
-
-    %% 分流：高分 -> MoE 改寫 -> 歸檔
-    Decision -- "Yes (High ROI)" --> MoE_Router["Phase 3: MoE Router"]
-
-    %% Phase 3: 執行改寫 (只針對值得的 JD)
-    subgraph "Phase 3: Tactical Execution (MoE)"
-        MoE_Router -->|"Research-Oriented"| Exp_Res["Advisor:<br>Research Fellow"]
-        MoE_Router -->|"Engineer-Oriented"| Exp_Eng["Advisor:<br>Staff Engineer"]
-        MoE_Router -->|"SoftSkill-Oriented"| Exp_Soft["Advisor:<br>Team Lead"]
+    %% ==========================================
+    %% Phase 3: 專家診斷 (Diagnosis)
+    %% ==========================================
+    subgraph "Phase 3: Expert Diagnosis"
+        Metadata --> Router{"Router<br/>(Decide experts to activate)"}
         
-        Exp_Res & Exp_Eng & Exp_Soft --> Assembler["Actionable Suggestions"]
+        Router --> ExpertLayer["👨‍🔬 Expert Council"]
+        
+        %% 連線：專家同時參考 完整檔案 + 履歷庫
+        Dossier -.-> ExpertLayer
+        ResumeDB -.->|"Retrieve Linked Resumes"| ExpertLayer
+        
+        ExpertLayer --> Eval["Evaluation Data<br/>(Skill Fit / Rewrite Effort / Gaps)"]
     end
 
-    Assembler --> FinalAction["Action: Move to<br/>/01_Must_Apply<br/>/02_Worth_Apply"]
+    %% =======================
+    %% Phase 4: 戰略地圖 (The War Room)
+    %% 這裡是最大的改變：先畫圖，再決策
+    %% =======================
+    subgraph "Phase 4: Strategic Command"
+        Eval & Metadata --> MapEngine["🗺️ Correlation Engine"]
+        
+        MapEngine --> VisualMap["Visual Correlation Map<br/>(Which JDs are similar?)"]
+        
+        VisualMap --> TheGeneral["👮 The General (Strategist)"]
+        
+        TheGeneral -->|"Draft Plan"| BattlePlan["📊 ImpactReport (JSON)<br/>Action 1: low effort, high impact (15 jds), high priority"]
+    end
 
-    style LogReject fill:#ffcdd2,stroke:#c62828
-    style FinalAction fill:#c8e6c9,stroke:#2e7d32
+    %% ==========================================
+    %% Human Loop (人類介入)
+    %% ==========================================
+    BattlePlan --> UserCheck{"👤 User Review"}
+    
+    UserCheck -- "Modify / Veto" --> Refine["Adjust Plan"]
+    Refine --> BriefingAgent
+    
+    UserCheck -- "Approve" --> BriefingAgent["⚡ Briefing Agent"]
+
+    %% ==========================================
+    %% Phase 5: 戰術執行 (Execution)
+    %% ==========================================
+    subgraph "Phase 5: Campaign Output"
+        BriefingAgent -->|"Cluster Context"| Advisor["👨‍🔬 Expert (Advisor Mode)"]
+        
+        Advisor --> OutputA["📂 /01_Campaign_Privacy<br/>- 📄 Strategy_Guide.md (Advice: Insert X objective in project A)<br/>- 📂 10 Target JDs"]
+        Advisor --> OutputB["📂 /02_Campaign_Infra<br/>..."]
+    end
+
+    %% Styling
+    style Indexer fill:#b2dfdb,stroke:#00695c
+    style ResumeDB fill:#b2dfdb,stroke:#00695c
+    style RejectLog fill:#ffcdd2,stroke:#c62828
+    style UserCheck fill:#fff9c4,stroke:#fbc02d,stroke-width:2px
+    style Advisor fill:#c8e6c9,stroke:#2e7d32
 ```
 
 ## 🚀 Key Features
-### 1. Tool-Augmented Intelligence:
-   * **External Grounding:** The system actively gathers external context before making decisions, moving beyond isolated JD analysis.
-   * **Available Tools:**
-      - Salary Validator: Estimate salary range according to position, company, location (mocking)
-      - Publication Matcher: Searches arXiv/Google Scholar for company research output
-      - Visa Compliance Checker: Keyword-based heuristic to detect sponsorship mentions
-   * **Impact:** Filters out underpaid roles or fake "research" positions before wasting effort on applications.
+#### 1. The Arsenal: Semantic Resume Indexing (Level 0)
+   * **Pre-processing Agent:** An asynchronous `Indexer Agent` breaks down the user's Master CV and Papers into semantic fragments tagged by attributes (e.g., `#Privacy`, `#ComputerVision`, `#Leadership`).
+   * **Vector-Based Retrieval:** Uses **ChromaDB** to retrieve only the relevant "skills blocks" needed for a specific JD, preventing context window pollution with irrelevant experiences.
 
-### 2. Global Reflection & ROI-Based Planning:
-   * **Cross-Document Reasoning:** Instead of treating each JD independently, the system performs comparative analysis across all opportunities.
-   * **How It Works:**
-      - Generate draft reports for all JDs
-      - Query "War Room" memory for similar past applications
-      - Calculate ROI: `Score = Match_Potential - Rewrite_Effort + History_Bonus`
-      - Re-rank based on past success patterns, Master CV overlap, and opportunity cost
-   * **Output:** Dynamic leaderboard with context-aware scores (not just keyword matching).
+#### 2. Tool-Augmented Intelligence (Phase 1)
+   * **External Grounding:** The system actively gathers external context to "comprehend" the JD before analysis.
+   * **Active Tools:**
+      - **Salary Validator:** Queries external sources (mock Levels.fyi/Glassdoor) to verify if the ROI justifies the effort.
+      - **Team Investigation:** Searches arXiv/Google Scholar to verify if the hiring team is scientifically active.
 
-### 3. Mixture of Experts (MoE) for Strategic Guidance:
-   * **Expert Advisory Panel:** Decomposes resume optimization into specialized sub-tasks.
-      - 🔬 Research Advisor: Suggests publication emphasis, novelty keywords
-      - ⚙️ Engineering Advisor: Proposes scale metrics, tech stack alignment
-      - 👥 Leadership Advisor: Evaluates collaboration content, cultural fit
-   * **Critical Note:** This system provides **targeted recommendations**, NOT auto-generated content. Users retain full control over final edits to ensure authenticity.
-   * **Workflow:**
-      - Router analyzes JD → determines which CV sections need attention
-      - Only relevant experts consulted (saves tokens + time)
-      - Structured suggestions with current text vs. recommended enhancements
+#### 3. Intelligent Triage & Gatekeeping (Phase 2)
+   * **Hard Constraints Check:** A strict "Gatekeeper Agent" enforces physical survival constraints first.
+   * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (EU Work Permit), **PhD Relevance**, and **Expertise mis-Matched** constraints.
+   * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the analysis pipeline.
 
-### 4. Autonomous Action Execution:
-   * **Priority-Based File Organization:**
-      - High ROI (≥ 85) → `/01_Must_Apply/`
-      - Medium ROI (70-84) → `/02_Worth_Apply/`
-      - Low ROI (< 70) → `/03_Ignore/`
-   * **Rejection Log Generation:** For ignored JDs, creates structured explanation of why ROI is low (past failures, salary misalignment, high effort)
-   * **Action Plan Templates:** For must-apply roles, generates TODO lists with specific CV edits and outreach strategies
+#### 4. Dynamic Mixture of Experts (Phase 3)
+   * **Router-Based Diagnosis:** Instead of a generic "Analysis Prompt," a Router activates specific agents based on the JD's domain.
+   * **Expert Council:**
+      - *Academic Analyst:* For Research Scientist roles (Focus: Paper alignment).
+      - *Engineering Lead:* For MLE roles (Focus: Deployment/C++).
+      - *Startup Scout:* For early-stage companies (Focus: Equity/Risk).
+   * **Benefit:** Provides domain-specific gap analysis rather than generic career advice.
 
-### 5. Context-Aware RAG with Historical Learning ("War Room"):
-   * **Personal Knowledge Base:** ChromaDB stores structured resume, papers, and `AboutMe.md` (values/constraints)
-   * **Battle Archive:** Automatically indexes lifecycle of every application (JD + Resume Version + Outcome)
-   * **Active Recall:** When analyzing new JD, performs semantic search against past applications
-   * **Tactical Warnings:** Proactively retrieves outcomes to inform strategy
-      - Example: "Similar role 'Sony Machine Learning Engineer' rejected 3 months ago, possibly due to visa. Consider skipping or clarifying sponsorship first."
+#### 5. Strategic Clustering (Phase 4 - The War Room)
+   * **Correlation Engine:** Cross validate JDs to compute the correlations between to help prioritise applications.
+   * **Battle Plans:** Instead of 15 separate resume edits, the system generates a unified strategy (e.g., *"Injecting [Self-Supervised Learning] insights into Project A will have positive impact on these 12 JDs"*).
 
-### 6. Privacy-First Hybrid Architecture:
-   * **Local Storage:** All CVs, papers, personal notes stored in ChromaDB (never uploaded)
-   * **Cloud Reasoning:** Gemini API used only for analysis tasks with sanitized inputs (PII redacted via `PrivacyShield`)
-   * **Safeguards:** Automatic email/phone number redaction, no raw CV transmission, only analysis results returned
+#### 6. Advisory Briefing Agent (Phase 5)
+   * **Strategy over Generation:** The system acts as a **Chief of Staff**, delivering a `Strategy_Guide.md` ("The What and Why") rather than just ghostwriting the resume ("The How").
+   * **Actionable Insights:** Provides specific directives like *"Highlight Paper X to counter the lack of Spark experience,"* preserving the user's authentic voice.
 
-### 7. Multimodal Ingestion with Smart Caching:
-   * **Vision Capabilities:** Processes non-text inputs (screenshots of job posts, scanned PDFs) using Gemini's vision model
-   * **Cost-Optimized:** Implements "Read-Once" policy:extracted text saved locally as `.txt` to reduce API latency on re-analysis
 
 ## ⚡ Quick Start & Setup
 
