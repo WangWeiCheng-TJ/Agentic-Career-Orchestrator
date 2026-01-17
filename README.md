@@ -1,6 +1,6 @@
 # Job Hunting Season 2: Agentic Career Orchestrator 
 #### An ROI-Driven Multi-Agent System
-> **Current Status:** V2.1 Design Phase (Architecture Validated / Implementation In Progress)
+> **Current Status:** V2.2 Design Phase (Architecture Validated / Implementation In Progress)
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
 ## 🎯 Motivation
@@ -22,9 +22,9 @@ This project also serves as the architectural pilot for **Real-World Data-Driven
 
 ## 📖 Introduction
 
-This project implements a Multi-Agent RAG Orchestrator powered by Google Gemini, designed to transform job hunting from a brute-force search into a strategic campaign.
+This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of-Advisors (MoA) pattern, where a Router Agent activates specialized LLM-based experts per JD and aggregates their assessments into strategic decisions. 
 
-Unlike monolithic approaches that rely on a single prompt to "analyze these JDs," this system decomposes the complex decision-making process into a pipeline of specialized agents. It leverages the reasoning capabilities of Gemini to process fragmented context: matching technical skills, research alignment, and hard constraints against individual job descriptions with high precision.
+Unlike infra-level sparse Mixture-of-Experts (MoE) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
 
 ### 🚀 System Evolution: From V1 to V2.1
 While V1 follows a predefined routine to analyze JDs, V2.1 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
@@ -36,12 +36,22 @@ The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy.
    - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
    - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
 
-#### V2.1 (Current): An Active "Strategic Commander
+#### V2.2 (Current): An Active "Strategic Commander"
+
 This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
-   - **Reason (Dynamic Mixture of Experts (MoE))**:<br> Introduces a Router Agent that dynamically assembles an Expert Council based on the JD's nature. e.g. A " Senior Research Scientist" role triggers the Academic Analyst (evaluating research alignment), Manager (evaluating soft skills).
-   - **Perceive (Tool-Augmented)**: <br> Breaks the "internal bubble" by autonomously verifying salaries and retrieving relevant arXiv papers to ground analysis in reality.
-   - **Plan (MoE Advisory)**: <br>Replaces generic feedback with specific Battle Plans (e.g., "Fixing this gap unlocks 15 positions"), utilizing a Mixture of Experts approach.
-   - **Act (Hard-Triage)**: <br>Actively rejects non-viable roles (Visa/PhD constraints) before wasting human attention.
+
+- **Reason (Dynamic Mixture-of-Advisors (MoA))**:  
+  Introduces a Router Agent that dynamically assembles an Expert Council based on the JD's nature. For example, a "Senior Research Scientist" role triggers the Academic Analyst (evaluating research alignment) and the Engineering Lead (evaluating technical depth and team fit), while a startup role may additionally trigger the Startup Scout (equity/risk).
+
+- **Perceive (Tool-Augmented)**:  
+  Breaks the "internal bubble" by autonomously verifying salaries and retrieving relevant arXiv papers or team signals to ground analysis in external reality.
+
+- **Plan (MoA Advisory Battle Plans)**:  
+  Replaces generic feedback with concrete Battle Plans (e.g., "Fixing this self-supervised learning gap unlocks 15 positions"), aggregating multiple advisors’ perspectives into a single strategic recommendation rather than relying on a single all-purpose prompt.
+
+- **Act (Hard Triage on Constraints)**:  
+  Actively rejects non-viable roles (e.g., visa infeasibility, location/compensation mismatch, PhD relevance constraints) before they consume human attention or additional compute.
+
    
 
 All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
@@ -54,8 +64,8 @@ All core document storage (CVs, personal databases) remains **locally managed** 
 
 ```mermaid
 graph TD
-    %% === 全域 Council 資源池 (MoE) ===
-    subgraph Pool ["🏛️ The Expert Council Pool (MoE)"]
+    %% === 全域 Council 資源池 (MoA) ===
+    subgraph Pool ["🏛️ The Expert Council Pool (MoA)"]
         direction LR
         E1["👔 HR Gatekeeper<br/>(Culture Fit, Soft Skills & Red Flags)"]:::council
         E2["⚙️ Tech Lead<br/>(Tech Stack Depth & Hard Skills)"]:::council
@@ -175,14 +185,17 @@ graph TD
    * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (EU Work Permit), **PhD Relevance**, and **Expertise mis-Matched** constraints.
    * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the analysis pipeline.
 
-#### 4. Dynamic Mixture of Experts (Phase 3)
-   * **Router-Based Diagnosis:** Instead of a generic "Analysis Prompt," a Router activates specific agents based on the JD's domain.
-   * **Expert Council:**
-      - *Academic Analyst:* For Research Scientist roles (Focus: Paper alignment).
-      - *Engineering Lead:* For MLE roles (Focus: Deployment/C++).
-      - *Startup Scout:* For early-stage companies (Focus: Equity/Risk).
-   * **Benefit:** Provides domain-specific gap analysis rather than generic career advice.
+#### 4. Dynamic Mixture-of-Advisors (Phase 3)
+* **Router-Based Diagnosis**: Instead of a single generic "Analysis Prompt", a Router Agent activates a small set of specialized advisors based on the JD's domain and seniority.
+    Example of the Council Members:
+    - **Academic Analyst**: For research‑heavy roles (e.g., Research Scientist; focus: publication track record, topic alignment, lab/team fit).
+    - **Engineering Lead**: For ML/Software roles (focus: deployment readiness, C++/systems skills, production constraints).
+    - **Startup Scout**: For early‑stage companies (focus: equity vs. cash trade‑offs, runway, product risk, role ambiguity).
+* **Benefit**: Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
 
+Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
+
+        
 #### 5. Strategic Clustering (Phase 4 - The War Room)
    * **Correlation Engine:** Cross validate JDs to compute the correlations between to help prioritise applications.
    * **Battle Plans:** Instead of 15 separate resume edits, the system generates a unified strategy (e.g., *"Injecting [Self-Supervised Learning] insights into Project A will have positive impact on these 12 JDs"*).
