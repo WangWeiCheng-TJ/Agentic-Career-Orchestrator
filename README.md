@@ -150,12 +150,16 @@ graph TD
 
     %% === Phase 5: 戰術執行 ===
     subgraph P5 ["Phase 5: Campaign Output"]
+    Aggregator["👨‍🔬 Aggregator<br/>(Orgainize Suggestions, Conflict Resolution)"]:::council
+
         BriefingAgent -->|"Cluster Context"| Panel3["👨‍🔬 Advisor Mode"]:::panel
         PersonalDB -.->|"Personal Knowledge"| Panel3["👨‍🔬 Advisor Mode"]:::panel
         ResumeDB -.->|"Past Resume"| Panel3["👨‍🔬 Advisor Mode"]:::panel
+        
+        Panel3["👨‍🔬 Advisor Mode"] --> Aggregator["👨‍🔬 Aggregator"]:::council
 
-        Panel3 --> OutputA["📂 /01_Campaign_Privacy<br/>- 📄 Strategy_Guide.md (Advice: Insert X objective in project A)<br/>- 📂 10 Target JDs"]:::output
-        Panel3 --> OutputB["📂 /02_Campaign_Infra<br/>..."]:::output
+        Aggregator --> OutputA["📂 /01_Campaign_Privacy<br/>- 📄 Strategy_Guide.md (Advice: Insert X objective in project A)<br/>- 📂 10 Target JDs"]:::output
+        Aggregator --> OutputB["📂 /02_Campaign_Infra<br/>..."]:::output
     end
 
     %% === 樣式定義 (跨模式相容) ===
