@@ -2,230 +2,189 @@ import os
 import glob
 import json
 import sys
-from dotenv import load_dotenv
-from src.ingests.history import FORCE_UPDATE
 from termcolor import colored, cprint
 from tqdm import tqdm
 import google.generativeai as genai
+from dotenv import load_dotenv
 
-# === 引用工具 ===
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-from src.agents.council import CouncilAgent
-from src.utils import fetch_relevant_history_resumes # [新增引用]
+# === 路徑設定 ===
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))) 
+sys.path.append(os.path.abspath(".")) 
+
+# 引入工具
+try:
+    from src.agents.character_setting.prompt_loader import PromptFactory
+    from src.tools.retry import generate_with_retry, validate_council_skill
+    
+    # [修正] 根據你的指示，cache_manager 現在在 agents 裡
+    from src.agents.cache_manager import council_memory 
+except ImportError as e:
+    cprint(f"❌ Error: Import failed. {e}", "red")
+    sys.exit(1)
 
 # === CONFIG ===
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-1.5-flash")
 
-# 資料流向
-PATH_PROFILE = "/app/data/personal/profile.md"           # 戰略意願 (Constraints)
-PATH_PARSED_RESUME = "/app/data/personal/parsed_resume.json" # 核心實力 (Capabilities)
-DIR_PENDING = "/app/data/processed/pending_council"      # 輸入：Phase 2 的結果
-DIR_READY = "/app/data/processed/ready_to_apply"         # 輸出：Phase 3 的結果
+DIR_PENDING = "/app/data/processed/pending_council" # 這裡應該是 Phase 2 產出的檔案
+DIR_READY = "/app/data/processed/ready_to_apply"
 
-# 設定為 True 會強制重跑並覆蓋已存在的結果 (適合調試 Prompt)
-# FORCE_UPDATE = False 
+# 除非你要調 Prompt，否則設為 False 以節省金錢
+FORCE_REFRESH = True 
 
-# 確保輸出目錄存在
-os.makedirs(DIR_READY, exist_ok=True)
+# === 關鍵：角色名稱對照表 (Name to ID Mapping) ===
+ROLE_NAME_TO_ID = {
+    "HR Gatekeeper": "E1",
+    "Tech Lead": "E2",
+    "Strategist": "E3",
+    "Visa Officer": "E4",
+    "Academic Reviewer": "E5",
+    "Academic": "E5", # 容錯
+    "System Architect": "E6",
+    "Leadership Scout": "E7",
+    "Startup Veteran": "E8"
+}
 
-def load_assembly_context(jd_text):
+def get_expert_color(eid):
+    colors = { "E1": "cyan", "E2": "magenta", "E3": "green", "E4": "red", "E5": "blue", "E6": "yellow", "E7": "white", "E8": "light_green" }
+    return colors.get(eid, "white")
+
+def get_target_experts(dossier):
     """
-    建立「組裝工廠」上下文：
-    1. 戰略意願 (Profile)
-    2. 零件庫 (Top 3 Relevant Resumes from History)
+    🕵️‍♂️ 智慧路由：支援兩種格式的輸入
     """
-    context_parts = []
-
-    # 1. Constraints
-    if os.path.exists(PATH_PROFILE):
-        with open(PATH_PROFILE, 'r') as f:
-            context_parts.append(f"### 1. STRATEGIC CONSTRAINTS:\n{f.read()}")
-
-    # 2. History Components (The Lego Box)
-    # 根據 JD 內容去撈最相關的履歷
-    history_resumes = fetch_relevant_history_resumes(jd_text, n_results=3)
+    target_ids = []
     
-    if history_resumes:
-        context_parts.append(f"### 2. RESUME COMPONENT LIBRARY (Top {len(history_resumes)} Matches):")
-        for i, res in enumerate(history_resumes):
-            # 將結構化 JSON 轉字串
-            res_str = json.dumps(res['content'], indent=2)
-            context_parts.append(f"--- [Option {i+1}] Source: {res['source_id']} ---\n{res_str}\n")
-    else:
-        context_parts.append("### 2. RESUME COMPONENT LIBRARY: (Empty - No history found)")
-        
-    return "\n\n".join(context_parts)
-
-def load_full_candidate_context():
-    """
-    組裝完整的候選人戰力包：
-    1. Profile.md (戰略意願)
-    2. Parsed Resume (核心能力數據)
-    """
-    context_parts = []
-
-    # 1. 戰略限制 (Constraints)
-    if os.path.exists(PATH_PROFILE):
-        with open(PATH_PROFILE, 'r', encoding='utf-8') as f:
-            context_parts.append(f"### 1. STRATEGIC CONSTRAINTS & WISHES:\n{f.read()}")
-    else:
-        context_parts.append("### 1. STRATEGIC CONSTRAINTS: (File missing)")
-
-    # 2. 結構化履歷 (Capabilities)
-    if os.path.exists(PATH_PARSED_RESUME):
-        with open(PATH_PARSED_RESUME, 'r', encoding='utf-8') as f:
-            resume_data = json.load(f)
-            # 轉成字串餵給 LLM
-            resume_str = json.dumps(resume_data, indent=2)
-            context_parts.append(f"### 2. CANDIDATE RESUME (STRUCTURED DATA):\n{resume_str}")
-    else:
-        cprint("⚠️ Warning: 'parsed_resume.json' not found. Council will fly blind.", "yellow")
-        context_parts.append("### 2. CANDIDATE RESUME: (Missing data. Run ingest first.)")
-
-    return "\n\n".join(context_parts)
-
-def get_expert_color(expert_name):
-    """🎨 給不同的專家分配顏色，增加視覺辨識度"""
-    name = expert_name.lower()
-    if "hr" in name or "gatekeeper" in name or "recruiter" in name:
-        return "light_blue"      # 藍色：HR
-    elif "tech" in name or "architect" in name or "engineer" in name:
-        return "light_magenta"   # 紫色：技術
-    elif "strategist" in name:
-        return "light_green"     # 綠色：戰略
-    elif "visa" in name:
-        return "light_red"       # 紅色：簽證
-    elif "academic" in name:
-        return "cyan"            # 青色：學術
-    elif "startup" in name:
-        return "yellow"          # 黃色：新創
-    elif "leadership" in name or "scout" in name:
-        return "light_yellow"    # 亮黃：領導力
-    else:
-        return "white"
-
-def run_council():
-    cprint("\n🏛️  [Phase 3] EXPERT COUNCIL (Modular Diagnostics)", "cyan", attrs=['bold', 'reverse'])
+    # === 模式 A: 讀取 Triage Result (ActiveFence 格式) ===
+    # 位置: triage_result -> referral_analysis
+    referral = dossier.get('triage_result', {}).get('referral_analysis', {})
     
-    if not API_KEY:
-        cprint("❌ API Key missing. Check .env", "red")
-        return
+    if referral and isinstance(referral, dict):
+        for eid, data in referral.items():
+            if not eid.startswith("E"): continue
+            
+            score = data.get('relevance', 0)
+            note = data.get('note', '').lower()
+            
+            # [優化邏輯]
+            # 1. 強制召喚：標籤是 Must, Important, Relevant (不管分數)
+            if note in ['must', 'important', 'relevant']:
+                target_ids.append(eid)
+                
+            # 2. 條件召喚：分數 >= 6 (即使標籤只是 Helpful 或 N/A)
+            # 這樣可以過濾掉 E3 (Score 3, Helpful) 和 E7 (Score 5, Helpful) -> 省錢！
+            elif score >= 6:
+                target_ids.append(eid)
+                
+        if target_ids:
+            return sorted(list(set(target_ids)))
 
-    # 1. 初始化
+    # === 模式 B: 讀取 Role Name List (Blackshark 格式) ===
+    # 位置: council_strategy -> active_experts
+    strategy = dossier.get('council_strategy', {})
+    active_roles = strategy.get('active_experts', [])
+    
+    if active_roles and isinstance(active_roles, list):
+        for role in active_roles:
+            eid = ROLE_NAME_TO_ID.get(role)
+            if eid:
+                target_ids.append(eid)
+        if target_ids:
+            return sorted(list(set(target_ids)))
+
+    # === 預設 (Fallback) ===
+    return ["E1", "E2"]
+
+
+def run_phase3_dynamic_execution():
+    cprint("\n🏛️  [Phase 3] EXPERT COUNCIL: Dynamic Diagnosis", "magenta", attrs=['bold', 'reverse'])
+    
+    # 初始化 (省略部分與之前相同...)
+    if not API_KEY: return
     genai.configure(api_key=API_KEY)
     model = genai.GenerativeModel(MODEL_NAME)
     
-    # 載入所有背景知識 (Profile + Resume)
-    full_context = load_full_candidate_context()
-    cprint(f"📜 Context Loaded ({len(full_context)} chars).", "cyan")
+    try:
+        # PromptFactory 需要「包含 character_setting 的目錄」= src/agents
+        # 從本檔 (src/phases/p3_council.py) 往回推，避免依賴 cwd，本地 / Docker 都能用
+        _src = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        pf_root = os.path.join(_src, "agents")
+        factory = PromptFactory(root_dir=pf_root)
+    except Exception as e:
+        cprint(f"❌ Error: {e}", "red"); return
 
-    agent = CouncilAgent(model)
-    
-    # 2. 掃描待處理檔案
     files = glob.glob(os.path.join(DIR_PENDING, "*.json"))
+    pbar = tqdm(files, desc="🧠 Processing Dossiers", unit="job")
     
-    if not files:
-        cprint(f"😴 No pending dossiers in {DIR_PENDING}. Run Phase 2 first.", "yellow")
-        return
-
-    cprint(f"📂 Evaluating {len(files)} dossiers...", "white")
-
-    # 3. 開始迴圈
-    pbar = tqdm(files, desc="🧠 Deliberating", unit="job")
-
     for filepath in pbar:
         filename = os.path.basename(filepath)
         target_path = os.path.join(DIR_READY, filename)
-
-        # === Skip 機制 (非破壞性) ===
-        if os.path.exists(target_path) and not FORCE_UPDATE:
-            continue
-
-        pbar.set_postfix(file=filename[:15])
-
+        
         with open(filepath, 'r', encoding='utf-8') as f:
             dossier = json.load(f)
-            
-        role = dossier.get('basic_info', {}).get('role', 'Unknown Role')
-        company = dossier.get('basic_info', {}).get('company', 'Unknown Company')
-        jd_text = dossier.get('raw_content', '')
 
-        # [關鍵修改] 針對這份 JD 去撈特定的歷史履歷
-        dynamic_context = load_assembly_context(jd_text)
+        company = dossier.get('basic_info', {}).get('company', 'Unknown')
+        raw_jd = dossier.get('raw_content', '')
+        
+        # === 1. 決定要叫誰 (Router) ===
+        # 這裡不再用寫死的 ACTIVE_EXPERTS，而是看這份 JD 需要誰
+        target_experts = get_target_experts(dossier)
+        
+        pbar.set_postfix(company=company[:10], experts=len(target_experts))
+        tqdm.write(colored(f"\nTarget: {company}", "white", attrs=['bold']) + 
+                   colored(f" | Summoning: {', '.join(target_experts)}", "yellow"))
 
-        # === 核心：Council 辯論 (Agent Call) ===
-        try:
-            strategy = agent.deliberate(dossier, full_context)
-        except Exception as e:
-            tqdm.write(colored(f"⚠️ Council Error on {filename}: {e}", "red"))
-            continue
+        context_data = {
+            "job_title": dossier.get('basic_info', {}).get('role', ''),
+            "company_name": company,
+            "raw_jd_text": raw_jd
+        }
 
-        # 將策略結果寫入 Dossier
-        dossier['council_strategy'] = strategy
+        expert_results = {}
         
-        # === 4. 視覺化儀表板 (Modular Dashboard) ===
-        eval_data = strategy.get("evaluation_data", {})
-        verdict = eval_data.get("verdict", "Stretch")
-        
-        # Header (根據 Verdict 變色)
-        v_color = "green" if verdict == "High Potential" else "yellow" if verdict == "Stretch" else "red"
-        tqdm.write(colored(f"\n🎯 {company} - {role} ", "white", attrs=['bold']) + colored(f"[{verdict}]", v_color))
-
-        # A. Feature Extraction (Skills)
-        matched = eval_data.get("matched_skills", [])
-        missing = eval_data.get("missing_critical_skills", [])
-        
-        if matched:
-            # 只顯示前 4 個，避免洗版
-            tqdm.write(colored(f"   ✅ Matched: {', '.join(matched[:4])}...", "green"))
-        if missing:
-            tqdm.write(colored(f"   ⛔ Missing: {', '.join(missing)}", "red", attrs=['bold']))
-
-        # B. Section Diagnostics (The Matrix)
-        diagnostics = eval_data.get("section_diagnostics", {})
-        
-        # 為了版面整潔，如果全部都是 Keep，就顯示一行 Summary 就好
-        needs_work = any(d.get("action") != "Keep" for d in diagnostics.values())
-        
-        if needs_work:
-            tqdm.write(colored("   🔧 Blueprint:", "white", attrs=['bold']))
-            sections = ["summary", "work_experience", "projects", "education", "skills", "publications"]
-            
-            for sec in sections:
-                data = diagnostics.get(sec, {"action": "Keep", "reason": ""})
-                action = data.get("action", "Keep")
-                reason = data.get("reason", "")
+        # === 2. 針對名單上的專家執行分析 (含 Cache) ===
+        for eid in target_experts:
+            try:
+                # [Cache Check]
+                cached_data = council_memory.get(raw_jd, eid, "SKILL") # 注意：這裡假設還是在做 Skill 分析
                 
-                # 顯示邏輯
-                if action == "Overhaul": 
-                    a_color = "light_red"
-                    icon = "🔨"
-                elif action == "Tweak": 
-                    a_color = "yellow"
-                    icon = "🔧"
-                else: 
-                    continue # Keep 的就不顯示了，保持專注
+                if cached_data and not FORCE_REFRESH:
+                    expert_results[eid] = cached_data
+                    tqdm.write(colored(f"  🧠 {eid}: Cache Hit", get_expert_color(eid)))
+                    continue
 
-                # 格式化輸出
-                label = sec.replace("_", " ").title()
-                tqdm.write(colored(f"      {icon} {label:<10}: {action}", a_color) + colored(f" ({reason[:50]}...)", "dark_grey"))
-        else:
-            tqdm.write(colored("   ✨ Resume Structure: Perfect Match (Keep As Is)", "green"))
+                # [LLM Call]
+                prompt = factory.create_expert_prompt(eid, "SKILL", context_data)
+                result_json = generate_with_retry(
+                    model=model, 
+                    prompt=prompt, 
+                    validator_func=validate_council_skill,
+                    max_retries=2
+                )
+                
+                # [Cache Save]
+                council_memory.save(raw_jd, eid, "SKILL", result_json)
+                expert_results[eid] = result_json
+                
+                # Visual
+                count = len(result_json.get("required_skills", []))
+                tqdm.write(colored(f"  👤 {eid}: Analyzed ({count} skills)", get_expert_color(eid)))
+            
+            except Exception as e:
+                tqdm.write(colored(f"  ❌ {eid} Failed: {e}", "red"))
 
-        tqdm.write(colored("-" * 60, "dark_grey"))
-
-        # === 5. 存檔 ===
-        # 存入 Ready 資料夾 (Overwrite)
-        with open(target_path, 'w', encoding='utf-8') as f:
-            json.dump(dossier, f, indent=2, ensure_ascii=False)
+        # === 3. 存檔 ===
+        if 'expert_council' not in dossier:
+            dossier['expert_council'] = {}
+            
+        dossier['expert_council']['skill_analysis'] = expert_results
         
-        # 不刪除原始檔案 (Non-Destructive)
-        # os.remove(filepath)
+        # 這裡示範直接覆蓋原始檔案 (Updating In-Place)，或者存到 DIR_READY
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(dossier, f, indent=2, ensure_ascii=False)
 
-    cprint("\n🎉 Phase 3 Complete. Strategies defined.", "magenta", attrs=['bold'])
-    cprint(f"   🚀 Ready to Apply: {len(glob.glob(os.path.join(DIR_READY, '*.json')))} jobs", "green")
+    cprint("\n🎉 Diagnosis Complete.", "green")
 
 if __name__ == "__main__":
-    run_council()
+    run_phase3_dynamic_execution()

@@ -10,6 +10,20 @@ You are a member of the **Expert Council**.
 
 {% if mode == "SKILL" %}
 ## 🟢 Phase 1: Skill Extraction
+### ⚠️ IMPORTANT OUTPUT RULES
+1. **Exhaustive Extraction**: Do NOT just list 1 or 2 main skills. You must extract **ALL** skills relevant to your domain ({{ focus_area }}).
+   - **Target Quantity**: list ALL (6~12, the more the better) per analysis. 
+   - If the JD mentions a list (e.g., "Python, Go, Rust"), extract EACH as a separate item.
+
+2. **Split Compound Skills**:
+   - ❌ Bad: {"topic": "Python and C++ experience"}
+   - ✅ Good: [{"topic": "Python"}, {"topic": "C++"}]
+   - ❌ Bad: {"topic": "CI/CD and Cloud"}
+   - ✅ Good: [{"topic": "CI/CD"}, {"topic": "Cloud Platforms"}]
+
+3. **Valid JSON**: The root key MUST be `"required_skills"`.
+4. **Evidence**: Every skill must have a quote.
+
 **Goal:** Analyze the JD and extract key **Skills & Requirements**.
 **Constraint:** Focus ONLY on the "Demand" side. Do not look at the resume yet.
 
@@ -35,16 +49,22 @@ Return JSON strictly following `skill_schema`.
 {% elif mode == "GAP_EFFORT" %}
 ## 🔵 Phase 2: Gap & Effort Analysis
 
-### Input Data 1: Target Skills (from Phase 1)
+### 🧠 Your Memory (From Phase 1)
+**Context:** This is what YOU ({{ role_name }}) identified as required skills in the previous step.
+"""
+{{ previous_phase_memory | tojson(indent=2) }}
+"""
+
+### Input Data 2: Target Skills (from Phase 1)
 {{ skill_list_json }}
 
-### Input Data 2: Your Personal Database (Evidence Search)
+### Input Data 3: Your Personal Database (Evidence Search)
 **Description:** Raw data from papers, GitHub, and notes.
 """
 {{ personal_db_text }} 
 """
 
-### Input Data 3: Your Resume Database (Reusable Sentences)
+### Input Data 4: Your Resume Database (Reusable Sentences)
 **Description:** Bullet points from previous CVs.
 """
 {{ resume_db_text }}
@@ -77,8 +97,17 @@ Return JSON strictly following `gap_effort_schema`.
 
 {% elif mode == "ADVISOR" %}
 ## 🟣 Phase 3: Strategic Advising
+
+### 🧠 Your Memory (From Phase 1 & 2)
+**Context:** Here is the analysis YOU have done so far.
+**Phase 1 (Skills):**
+{{ memory_phase1 | tojson(indent=2) }}
+
+**Phase 2 (Gaps):**
+{{ memory_phase2 | tojson(indent=2) }}
+
 **Goal:** Provide concrete **Action Items** and **Draft Content** to fill the gaps or highlight strengths identified in Phase 2.
-**Constraint:** Do not just say "improve this". **Write the actual bullet point** or providing the specific learning resource.
+**Constraint:** Give advise or suggestion, not sentences to copy paste. 
 
 ### Input Data
 **Candidate Profile:**

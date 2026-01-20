@@ -7,8 +7,8 @@
       "few_shot_examples": {
         "skill": [
           {
-            "input": "We are a flat organization with a fast-paced environment.",
-            "output_json": "{\"topic\": \"Autonomy\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Must demonstrate ability to unblock oneself without waiting for manager approval.\", \"quote_from_jd\": \"flat organization\"}}"
+            "input": "Job Description says: 'We are a flat organization with a fast-paced environment.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"Autonomy\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Must demonstrate ability to unblock oneself without waiting for manager approval.\", \"quote_from_jd\": \"flat organization\"}}]}"
           }
         ],
         "gap_effort": [
@@ -41,12 +41,12 @@
       "few_shot_examples": {
         "skill": [
           {
-            "input": "Experience with Rust and high-performance computing.",
-            "output_json": "{\"topic\": \"Rust Ownership & Concurrency\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Expect questions on Lifetimes, Pin, and async runtimes (Tokio). Not just syntax.\", \"quote_from_jd\": \"high-performance computing\"}}"
+            "input": "Job Description says: 'Experience with Rust and high-performance computing.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"Rust Ownership & Concurrency\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Expect questions on Lifetimes, Pin, and async runtimes (Tokio). Not just syntax.\", \"quote_from_jd\": \"high-performance computing\"}}]}"
           },
           {
-            "input": "Knowledge of CI/CD pipelines.",
-            "output_json": "{\"topic\": \"Modern CI/CD\", \"priority\": \"NICE_TO_HAVE\", \"analysis\": {\"hidden_bar\": \"Look for GitHub Actions or GitLab CI experience, specifically caching builds for Rust.\", \"quote_from_jd\": \"CI/CD pipelines\"}}"
+            "input": "Job Description says: 'Knowledge of CI/CD pipelines.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"Modern CI/CD\", \"priority\": \"NICE_TO_HAVE\", \"analysis\": {\"hidden_bar\": \"Look for GitHub Actions or GitLab CI experience, specifically caching builds for Rust.\", \"quote_from_jd\": \"CI/CD pipelines\"}}]}"
           }
         ],
         "gap_effort": [
@@ -95,59 +95,83 @@
     },
   
     "E3": {
-      "role_name": "Strategist",
-      "role_icon": "♟️",
-      "focus_area": "ROI, Tax, Location Tier & Stability",
-      "philosophy": "A career is an investment portfolio. I analyze the risk-reward ratio, tax implications (especially long-term US stock holder), and net-saving. I ignore the hype.",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Location: Amsterdam, Hybrid.",
-            "output_json": "{\"topic\": \"Tax Exposure (Box 3)\", \"priority\": \"INFO\", \"analysis\": {\"hidden_bar\": \"Check if 30% ruling applies. If you have significant savings, Box 3 wealth tax will eat your returns.\", \"quote_from_jd\": \"Amsterdam\"}}"
+    "role_name": "Strategist",
+    "role_icon": "♟️",
+    "focus_area": "Net Saving, US Stock Tax & ROI",
+    "philosophy": "A career is an investment portfolio. I calculate the 'Real Net'—after tax, cost of living, and crucially, CAPITAL GAINS TAX on your US stocks. If monthly net saving < €1200, I flag it immediately.",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Location: Amsterdam, Hybrid.'",
+          "output_json": "{\"required_skills\": [{\"topic\": \"Net Saving & Tax\", \"priority\": \"INFO\", \"analysis\": {\"hidden_bar\": \"Warning: Box 3 tax taxes unrealized gains. Calculate if (Salary - Tax - Rent) > €1200. If not, this is a bad deal.\", \"quote_from_jd\": \"Amsterdam\"}}]}"
+        },
+        {
+          "input": "Job Description says: 'Location: Zurich, Switzerland.'",
+          "output_json": "{\"required_skills\": [{\"topic\": \"US Stock Friendliness\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Switzerland has 0% capital gains tax for private investors. This is perfect for your long-term NVDA holding strategy.\", \"quote_from_jd\": \"Zurich\"}}]}"
+        }
+      ],
+      "gap_effort": [
+        {
+          "skill_ref_id": "skill_loc_01",
+          "topic": "Relocation Readiness",
+          "evidence_in_personal_db": {"status": "FOUND_STRONG", "evidence_snippet": "Currently based in Belgium (EU Blue Card).", "gap_conclusion": "SKILL_CONFIRMED"},
+          "resume_reusability": {"status": "NO_MATCH", "closest_existing_bullet": null, "modification_required": "NEW_CREATION"},
+          "effort_assessment": {"level": "LOW", "score": 1, "reason": "Just need to state legal status."},
+          "fixing_strategy": {"action": "WRITE_FROM_SCRATCH", "instruction": "Add 'EU Work Authorization: No Sponsorship Required' to header."}
+        }
+      ],
+      "advisor": [
+        {
+          "related_skill_id": "skill_salary_neg",
+          "topic": "Compensation Strategy",
+          "action_type": "ADVICE",
+          "priority": "HIGH",
+          "content_suggestion": {
+            "before_text": null,
+            "after_text": "Target Base: €85k+ to ensure >€1200 monthly savings after tax/rent.",
+            "rationale": "Given the high tax bracket in this region, anything below €85k fails your net-saving threshold."
           }
-        ],
-        "gap_effort": [
-          {
-            "skill_ref_id": "skill_loc_01",
-            "topic": "Relocation Readiness",
-            "evidence_in_personal_db": {"status": "FOUND_STRONG", "evidence_snippet": "Currently based in Belgium (EU Blue Card equivalent).", "gap_conclusion": "SKILL_CONFIRMED"},
-            "resume_reusability": {"status": "NO_MATCH", "closest_existing_bullet": null, "modification_required": "NEW_CREATION"},
-            "effort_assessment": {"level": "LOW", "score": 1, "reason": "Just need to state the legal fact."},
-            "fixing_strategy": {"action": "WRITE_FROM_SCRATCH", "instruction": "Add 'EU Work Authorization: No Sponsorship Required' to header."}
+        }
+      ]
+    }
+  },
+
+  "E4": {
+    "role_name": "Visa Officer",
+    "role_icon": "🛂",
+    "focus_area": "Work Permit, Sponsorship & Legal Feasibility",
+    "philosophy": "I categorize visa policies into three buckets: 1. Explicit NO (Don't apply), 2. Explicit YES (Green light), 3. Ambiguous (Need verification). I save you from applying to black holes.",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Must be eligible to work in the EU without sponsorship.'",
+          "output_json": "{\"required_skills\": [{\"topic\": \"Sponsorship Policy\", \"priority\": \"BLOCKER\", \"analysis\": {\"hidden_bar\": \"Category 1: Explicit NO. Unless you have an open work permit (like a Blue Card that allows transfer), do not apply.\", \"quote_from_jd\": \"without sponsorship\"}}]}"
+        },
+        {
+          "input": "Job Description says: 'Visa sponsorship and relocation support provided.'",
+          "output_json": "{\"required_skills\": [{\"topic\": \"Sponsorship Policy\", \"priority\": \"NICE_TO_HAVE\", \"analysis\": {\"hidden_bar\": \"Category 2: Explicit YES. This is a safe target.\", \"quote_from_jd\": \"Visa sponsorship ... provided\"}}]}"
+        },
+        {
+          "input": "Job Description says: 'Location: Berlin. (No mention of visa in JD)'",
+          "output_json": "{\"required_skills\": [{\"topic\": \"Sponsorship Policy\", \"priority\": \"WARNING\", \"analysis\": {\"hidden_bar\": \"Category 3: Ambiguous. Germany is generally open, but need to check if the company is on the list of trusted sponsors.\", \"quote_from_jd\": \"Berlin\"}}]}"
+        }
+      ],
+      "gap_effort": [],
+      "advisor": [
+        {
+          "related_skill_id": "skill_visa_status",
+          "topic": "Visa Status",
+          "action_type": "RESUME_REWRITE",
+          "priority": "HIGH",
+          "content_suggestion": {
+            "before_text": null,
+            "after_text": "EU Blue Card Holder (Eligible for fast-track transfer within EU)",
+            "rationale": "Clarifies your status immediately to move you from 'Ambiguous' to 'Easy Hire'."
           }
-        ],
-        "advisor": [
-          {
-            "related_skill_id": "skill_salary_neg",
-            "topic": "Compensation Strategy",
-            "action_type": "COVER_LETTER_HOOK",
-            "priority": "MEDIUM",
-            "content_suggestion": {
-              "before_text": null,
-              "after_text": "Open to relocation; specifically attracted to Switzerland's capital gains tax structure which aligns with my long-term investment strategy.",
-              "rationale": "Signals you are financially literate and committed to the location for structural reasons, not just tourism."
-            }
-          }
-        ]
-      }
-    },
-  
-    "E4": {
-      "role_name": "Visa Officer",
-      "role_icon": "🛂",
-      "focus_area": "Work Permit, Sponsorship & Legal Feasibility",
-      "philosophy": "Bureaucracy is binary. You either qualify or you don't. I check for sponsorship licenses and processing times.",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Must be eligible to work in the EU.",
-            "output_json": "{\"topic\": \"Work Authorization\", \"priority\": \"BLOCKER\", \"analysis\": {\"hidden_bar\": \"They likely don't have a sponsorship license. Check if you qualify for 'Highly Skilled Migrant' independently.\", \"quote_from_jd\": \"eligible to work\"}}"
-          }
-        ],
-        "gap_effort": [],
-        "advisor": []
-      }
-    },
+        }
+      ]
+    }
+  },
   
     "E5": {
       "role_name": "Academic",
@@ -157,8 +181,8 @@
       "few_shot_examples": {
         "skill": [
           {
-            "input": "Experience with state-of-the-art GANs.",
-            "output_json": "{\"topic\": \"Generative AI\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Can you read a paper on Arxiv and implement it in 2 days?\", \"quote_from_jd\": \"SOTA GANs\"}}"
+            "input": "Job Description says: 'Experience with state-of-the-art GANs.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"Generative AI\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Can you read a paper on Arxiv and implement it in 2 days?\", \"quote_from_jd\": \"SOTA GANs\"}}]}"
           }
         ],
         "gap_effort": [
@@ -195,12 +219,33 @@
       "few_shot_examples": {
         "skill": [
           {
-            "input": "Deploying ML models to production.",
-            "output_json": "{\"topic\": \"MLOps\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Docker, K8s, Triton Inference Server. Not just Flask run.\", \"quote_from_jd\": \"production\"}}"
+            "input": "Job Description says: 'Deploying ML models to production.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"MLOps\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Docker, K8s, Triton Inference Server. Not just Flask run.\", \"quote_from_jd\": \"production\"}}]}"
           }
         ],
-        "gap_effort": [],
-        "advisor": []
+        "gap_effort": [
+        {
+          "skill_ref_id": "skill_mlops_01",
+          "topic": "Containerization (Docker)",
+          "evidence_in_personal_db": {"status": "FOUND_WEAK", "evidence_snippet": "Found a simple Dockerfile in your 2022 hackathon repo.", "gap_conclusion": "SKILL_CONFIRMED"},
+          "resume_reusability": {"status": "CONCEPT_MATCH", "closest_existing_bullet": "Used Python scripts to run experiments.", "modification_required": "TWIST_ANGLE"},
+          "effort_assessment": {"level": "LOW", "score": 3, "reason": "You have the artifact (Dockerfile), but resume only mentions Python scripts."},
+          "fixing_strategy": {"action": "TWIST_VIEWPOINT", "instruction": "Rename 'Python Scripting' to 'Containerized Environment'. Mention that you encapsulated dependencies using Docker."}
+        }
+      ],
+      "advisor": [
+        {
+          "related_skill_id": "skill_mlops_01",
+          "topic": "Production Readiness",
+          "action_type": "RESUME_REWRITE",
+          "priority": "HIGH",
+          "content_suggestion": {
+            "before_text": "Wrote Python scripts for data processing.",
+            "after_text": "Designed a reproducible data pipeline encapsulated in Docker containers, ensuring consistent environments from dev to staging.",
+            "rationale": "Shifts perception from 'Script Kiddie' to 'Systems Engineer'."
+          }
+        }
+      ]
       }
     },
   
@@ -212,12 +257,33 @@
       "few_shot_examples": {
         "skill": [
           {
-            "input": "Mentor junior engineers.",
-            "output_json": "{\"topic\": \"Mentorship\", \"priority\": \"NICE_TO_HAVE\", \"analysis\": {\"hidden_bar\": \"Evidence of code reviews, tech talks, or onboarding docs.\", \"quote_from_jd\": \"Mentor\"}}"
+            "input": "Job Description says: 'Mentor junior engineers and conduct code reviews.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"Mentorship\", \"priority\": \"NICE_TO_HAVE\", \"analysis\": {\"hidden_bar\": \"Evidence of code reviews, tech talks, or onboarding docs.\", \"quote_from_jd\": \"Mentor junior engineers\"}}]}"
           }
         ],
-        "gap_effort": [],
-        "advisor": []
+        "gap_effort": [
+        {
+          "skill_ref_id": "skill_lead_01",
+          "topic": "Technical Leadership",
+          "evidence_in_personal_db": {"status": "FOUND_STRONG", "evidence_snippet": "Notes: Helped lab mate fix memory leaks every week.", "gap_conclusion": "SKILL_CONFIRMED"},
+          "resume_reusability": {"status": "CONCEPT_MATCH", "closest_existing_bullet": "Collaborated with lab mates.", "modification_required": "TWIST_ANGLE"},
+          "effort_assessment": {"level": "LOW", "score": 2, "reason": "You were leading, but you wrote it as 'Collaborating'."},
+          "fixing_strategy": {"action": "TWIST_VIEWPOINT", "instruction": "Change 'Collaborated' to 'Mentored'. Quantify it: 'Guided 2 junior researchers in debugging C++ memory leaks'."}
+        }
+      ],
+      "advisor": [
+        {
+          "related_skill_id": "skill_lead_01",
+          "topic": "Force Multiplication",
+          "action_type": "RESUME_REWRITE",
+          "priority": "MEDIUM",
+          "content_suggestion": {
+            "before_text": "Worked in a team of 4.",
+            "after_text": "Orchestrated code reviews for a 4-person team, establishing strict linting standards that reduced merge conflicts by 30%.",
+            "rationale": "Demonstrates 'Governance' and 'Standards', not just 'Participation'."
+          }
+        }
+      ]
       }
     },
   
@@ -229,12 +295,33 @@
       "few_shot_examples": {
         "skill": [
           {
-            "input": "Thrive in ambiguous environment.",
-            "output_json": "{\"topic\": \"Grit\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Can you work without a PM?\", \"quote_from_jd\": \"ambiguous\"}}"
+            "input": "Job Description says: 'Thrive in ambiguous environment and wear multiple hats.'",
+            "output_json": "{\"required_skills\": [{\"topic\": \"Grit\", \"priority\": \"MUST_HAVE\", \"analysis\": {\"hidden_bar\": \"Can you work without a PM? Look for 'End-to-End' or 'Solo' projects.\", \"quote_from_jd\": \"ambiguous environment\"}}]}"
           }
         ],
-        "gap_effort": [],
-        "advisor": []
+        "gap_effort": [
+        {
+          "skill_ref_id": "skill_mvp_01",
+          "topic": "Rapid Prototyping",
+          "evidence_in_personal_db": {"status": "FOUND_STRONG", "evidence_snippet": "GitHub: 3 Hackathon projects built in 48 hours.", "gap_conclusion": "SKILL_CONFIRMED"},
+          "resume_reusability": {"status": "NO_MATCH", "closest_existing_bullet": null, "modification_required": "NEW_CREATION"},
+          "effort_assessment": {"level": "LOW", "score": 1, "reason": "Evidence is strong in GitHub, just need to add a line to Resume."},
+          "fixing_strategy": {"action": "WRITE_FROM_SCRATCH", "instruction": "Add a 'Side Projects' section highlighting the Hackathon win to show speed."}
+        }
+      ],
+      "advisor": [
+        {
+          "related_skill_id": "skill_mvp_01",
+          "topic": "Bias for Action",
+          "action_type": "RESUME_REWRITE",
+          "priority": "HIGH",
+          "content_suggestion": {
+            "before_text": "Researched optimal architectures for 6 months.",
+            "after_text": "Delivered MVP in 2 weeks by leveraging off-the-shelf models, enabling early user testing before optimizing the architecture.",
+            "rationale": "Shows you prioritize 'Business Value' and 'Time-to-Market' over 'Academic Perfection'."
+          }
+        }
+      ]
       }
     },
   

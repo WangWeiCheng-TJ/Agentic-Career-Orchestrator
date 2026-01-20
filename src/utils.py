@@ -14,6 +14,9 @@ from termcolor import cprint
 
 CHROMA_PATH = os.getenv("CHROMA_DB_PATH", "/app/data/chroma_db")
 
+
+
+
 def extract_text_from_pdf(filepath, model_name="gemini-1.5-flash"):
     """
     [新增] 通用讀取工具：優先嘗試 pypdf，失敗或字數太少則自動轉 OCR

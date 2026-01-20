@@ -122,31 +122,31 @@ class ProfileGeneratorAgent:
         
         # 轉成 Markdown (Triage 用)
         markdown_output = f"""# 🛡️ Personal Triage Profile (Auto-Generated)
-> **Source**: Personal Database (Papers Filtered)
-> **Date**: (Auto)
+            > **Source**: Personal Database (Papers Filtered)
+            > **Date**: (Auto)
 
-## 1. 🎓 Professional Core
-- **Education**: {data.get('education_level', 'Unknown')}
-- **Inferred Level**: {data.get('seniority_level', 'Senior')}
-- **Target Roles**: {", ".join(data.get('target_roles', []))}
-- **Roles to Avoid**: {", ".join(data.get('avoid_roles', []))}
+            ## 1. 🎓 Professional Core
+            - **Education**: {data.get('education_level', 'Unknown')}
+            - **Inferred Level**: {data.get('seniority_level', 'Senior')}
+            - **Target Roles**: {", ".join(data.get('target_roles', []))}
+            - **Roles to Avoid**: {", ".join(data.get('avoid_roles', []))}
 
-## 2. 🌍 Location & Relocation
-- **Current Base**: {data.get('current_location', 'Unknown')}
-- **Inferred Preference**: {data.get('relocation_inference', 'Unknown')}
+            ## 2. 🌍 Location & Relocation
+            - **Current Base**: {data.get('current_location', 'Unknown')}
+            - **Inferred Preference**: {data.get('relocation_inference', 'Unknown')}
 
-## 3. 🛠️ Tech Stack Strategy
-- **🚀 Primary Stack (Keep)**: 
-  {", ".join(data.get('primary_stack', []))}
+            ## 3. 🛠️ Tech Stack Strategy
+            - **🚀 Primary Stack (Keep)**: 
+            {", ".join(data.get('primary_stack', []))}
 
-- **🛑 Anti-Stack (Reject)**: 
-  *Inferred from lack of presence or context in DB.*
-  {", ".join(data.get('anti_stack', []))}
+            - **🛑 Anti-Stack (Reject)**: 
+            *Inferred from lack of presence or context in DB.*
+            {", ".join(data.get('anti_stack', []))}
 
-## 4. 🧠 Agent Observations
-- Analyzed {len(context) // 100} units of personal context (excluding papers).
-- Inferred focus: {", ".join(data.get('primary_stack', [])[:3])}.
-"""
+            ## 4. 🧠 Agent Observations
+            - Analyzed {len(context) // 100} units of personal context (excluding papers).
+            - Inferred focus: {", ".join(data.get('primary_stack', [])[:3])}.
+            """
         return markdown_output
 
 if __name__ == "__main__":

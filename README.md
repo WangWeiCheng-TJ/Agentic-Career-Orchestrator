@@ -105,13 +105,12 @@ graph TD
         Triage -- "❌ Reject" --> RejectLog["📝 Rejected_Log.json<br/>(Brief Reason)"]:::output
         RejectLog --> Bin["📂 /99_Trash"]
 
-        Triage -- "✅ Pass" --> Metadata["Metadata<br/>(Role/Domain)"]:::doc
-        Metadata --> Router
+        Triage -- "✅ Pass" --> FirstReport["FirstReport<br/>(Briefing for Council)"]:::doc
     end
 
     %% === Phase 3 流程 ===
     subgraph P3 ["Phase 3: Expert Diagnosis"]
-        Metadata --> Router["🔀 Council Router"]:::agent
+        FirstReport --> Router["🔀 Council Router"]:::agent
         Dossier --> Router
 
         Router --> |"Calls"| ActivePanel
@@ -120,12 +119,12 @@ graph TD
             direction TB
             Panel1["🔍 Skill Analysis Mode"]:::panel
             Panel2["🧠 Gap & Effort Analysis Mode"]:::panel
+            Panel1 --> |"Search Queries"| Retriever["🤖 Retriever"]:::agent
             Panel1 --> |"Requirement Context"|Panel2
         end
         
         Dossier --> Panel2
-        Panel1 --> |"Search Queries"| Retriever["🤖 Retriever"]:::agent
-
+        
         Retriever <-.-> |"Evidence/Chunks"| PersonalDB
         Retriever <-.-> |"Reusable Sentences"| ResumeDB
         Retriever --> |"Retrieved Material"| Panel2
@@ -135,7 +134,7 @@ graph TD
 
     %% === Phase 4: 戰略地圖 ===
     subgraph P4 ["Phase 4: Strategic Command"]
-        Out & Metadata --> MapEngine["🗺️ Correlation Engine"]:::agent
+        Out & FirstReport --> MapEngine["🗺️ Correlation Engine"]:::agent
         MapEngine --> VisualMap["Visual Correlation Map"]
         VisualMap --> TheGeneral["👮 Strategist"]:::agent
         TheGeneral --> BattlePlan["📊 ImpactReport"]:::output
