@@ -7,7 +7,7 @@
 
 The primary motivation behind this project is to solve the extremely low signal-to-noise ratio in the current job market and the unsustainable time cost of high-quality applications.
 
-In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer". Manually parsing hundreds of JDs to find the few that align with specific constraints (e.g., Privacy-Preserving AI, European Visa sponsorship) is a exhausting process that is an inefficient process that drains cognitive resources.
+In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer". Manually parsing hundreds of JDs to find the few that align with specific constraints (e.g., Privacy-Preserving AI, European Visa sponsorship) is an exhausting and inefficient process that drains cognitive resources.
 
 Furthermore, effective job hunting requires more than just reading; it demands **verification** (checking market salary, validating research alignment), **reflection** (comparing against past applications to avoid repeated mistakes), and **strategic execution** (prioritizing high-ROI opportunities and allocating effort efficiently). 
 
@@ -187,6 +187,7 @@ graph TD
    * **Hard Constraints Check:** A strict "Gatekeeper Agent" enforces physical survival constraints first.
    * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (EU Work Permit), **PhD Relevance**, and **Expertise mis-Matched** constraints.
    * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the analysis pipeline.
+   * **Implementation Status**: Implemented as ``TriageAgent`` in ``src/phases/p2_triage.py``. Each dossier is enriched with a structured triage_result block (e.g., ``decision``, ``reason``, ``domain_mismatch``), and only dossiers that pass this gate are moved into the pending_council queue for downstream MoA routing.
 
 #### 4. Dynamic Mixture-of-Agents (Phase 3)
 * **Router-Based Diagnosis**: Instead of a single generic "Analysis Prompt", a Router Agent activates a small set of specialized reviewers based on the JD's domain and seniority.
@@ -195,6 +196,8 @@ graph TD
     - **Engineering Lead**: For ML/Software roles (focus: deployment readiness, C++/systems skills, production constraints).
     - **Startup Scout**: For early‑stage companies (focus: equity vs. cash trade‑offs, runway, product risk, role ambiguity).
 * **Benefit**: Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
+* **Implementation Status**: Implemented as a single-pass council: for each JD, the Router selects a number of advisors and calls each exactly once, storing their scores and rationales back into the dossier. There is no multi-round debate at this stage due to API cost.
+* **Planned Enhancement**: A lightweight keyword-only ```user_profile.json`` will be introduced to pre-filter obviously mismatched JDs (e.g., hard skills that are completely absent) before invoking the council, further reducing large-model calls.
 
 Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
 
@@ -202,10 +205,13 @@ Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑a
 #### 5. Strategic Clustering (Phase 4 - The War Room)
    * **Correlation Engine:** Cross validate JDs to compute the correlations between to help prioritise applications.
    * **Battle Plans:** Instead of 15 separate resume edits, the system generates a unified strategy (e.g., *"Injecting [Self-Supervised Learning] insights into Project A will have positive impact on these 12 JDs"*).
+   * **Implementation Status**: Currently aggregates advisor scores and gap tags per JD into a ``Strategic_Leaderboard.csv``, ranking opportunities by a simple ROI heuristic. Clustering is greedy and intentionally minimal.
+   * **Planned Enhancement**: For small batches of JDs, a high-context LLM call (e.g., Gemini Flash) will directly ingest all council reports in one shot to synthesize global “template-first” strategies, without manual correlation code.
 
 #### 6. Advisory Briefing Agent (Phase 5)
    * **Strategy over Generation:** The system acts as a **Chief of Staff**, delivering a `Strategy_Guide.md` ("The What and Why") rather than just ghostwriting the resume ("The How").
    * **Actionable Insights:** Provides specific directives like *"Highlight Paper X to counter the lack of Spark experience,"* preserving the user's authentic voice.
+   * **Implementation Status**: Generates per-JD ``Analysis_*.md`` files and a consolidated ``Strategy_Guide.md`` summarizing priorities and recurring gaps. Advanced portfolio-level optimization and RL-style learning are reserved for V3.0.
 
 
 ## ⚡ Quick Start & Setup
@@ -224,14 +230,30 @@ Start the Docker container in detached mode: ```docker-compose up -d --build```
     **Step 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
     * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/data/ingest.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingest_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
+    * **[NEW] Generate Tech Cheat Sheet (The Gatekeeper):**
+        * Use **NotebookLLM** to summarize your `AboutMe.md` + `Resume` into a raw JSON.
+        * Save it as `src/data/user_profile.json`.
+        * *Purpose:* This allows the system to pre-filter mismatched JDs using the lightweight Gemma model, saving precious Flash quota for deep analysis.
 
-    **Step 2**: The Hunt (Routine) <br>
-    Execute this loop when adding new JDs.
+    **Step 2**: The Hunt <br>(V2.2 pipeline – Phase 1–3 are currently run via phase scripts, `main.py` remains V1 legacy)
     * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
-    * Hunt: Run the main orchestrator.<br> ```docker-compose run --rm orchestrator python src/main.py``` 
+    * Phase 1–3 (current V2.2 workflow):  
+        * _Run the phase scripts explicitly (until they are fully integrated into `src/main.py` in a later update)._  
+        * ```bash
+            # Phase 1: Tool-augmented JD parsing
+            docker-compose run --rm orchestrator python src/phases/p1_intel.py
+
+            # Phase 2: Triage & Gatekeeping
+            docker-compose run --rm orchestrator python src/phases/p2_triage.py
+
+            # Phase 3: MoA Council (dynamic advisors)
+            docker-compose run --rm orchestrator python src/phases/p3_council.py
+            ```
     * Review: Check the output in ```data/reports/```:
         * ```Strategic_Leaderboard.csv```: Prioritize applications.
         * ```Analysis_*.md```: Read detailed strategy & warnings.
+        * These reports are directly produced by the multi-phase pipeline (Triage, MoA council, War Room) implemented under src/phases/.
+    * Note: src/main.py currently runs the legacy V1 pipeline. V2.2 integrates Phase 1~3 as separate scripts under ``src/phases/`` and will be merged back into main.py in a future refactor.
 
     **Step 3**: Post-Battle Maintenance<br> When you receive an outcome (Reject/Interview):
     * Move the JD folder from Ongoing to Rejected (on your local drive).
@@ -240,7 +262,9 @@ Start the Docker container in detached mode: ```docker-compose up -d --build```
 
 ## 🛠️ Tech Stack
 * **Orchestration:** Python, Google Generative AI SDK (Gemini API)
-* **Model:** Gemma-3-27b
+* **Hybrid Model Architecture (Smart Gateway):**
+    * **Logic & Extraction:** Gemma-3-27b-it (Unlimited Quota)
+    * **Long-Context Retrieval:** Gemini-2.5-Flash (High TPM, Daily Limit Optimized)
 * **Vector Store:** ChromaDB (Using default `all-MiniLM-L6-v2` for local embeddings)
 * **Environment:** Python 3.11 / Docker
 
