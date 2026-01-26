@@ -1,76 +1,222 @@
-# Local LLM Decision Orchestrator: Job Hunting Season
-
-> **Status:** MVP Validated (Local Execution / V1.1) <br>
+# Job Hunting Season 2: Agentic Career Orchestrator 
+#### An ROI-Driven Multi-Agent System
+**Not a ghostwriter, just an assistant and probably strategist**
+> **Current Status:** V2.2 Design Phase (Architecture Validated / Implementation In Progress)
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
 ## 🎯 Motivation
-The primary motivation behind this project is to address the inefficiency of manually filtering noise from job descriptions in the job market.
 
-In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer".
+The primary motivation behind this project is to solve the extremely low signal-to-noise ratio in the current job market and the unsustainable time cost of high-quality applications.
 
-This project was built to validate that a **Local LLM Agent** can serve as an intelligent filter and planner, solving this "needle in a haystack" problem while preserving data privacy.
+In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer". Manually parsing hundreds of JDs to find the few that align with specific constraints (e.g., Privacy-Preserving AI, European Visa sponsorship) is an exhausting and inefficient process that drains cognitive resources.
 
-Crucially, this project also serves as the pilot for a research project: **Real-World Data-Driven Synthetic Surveillance Dataset Generation Pipeline**.<br>
-By treating video generation models and task-specific LoRAs as "Agents," the future research aims to leverage this same agentic workflow to significantly improve efficiency and reduce computational costs in synthetic data generation.
+Furthermore, effective job hunting requires more than just reading; it demands **verification** (checking market salary, validating research alignment), **reflection** (comparing against past applications to avoid repeated mistakes), and **strategic execution** (prioritizing high-ROI opportunities and allocating effort efficiently). 
+
+
+This project is to build an ROI-Driven Agentic System that automates the "low-level filtering" and "strategic intelligence gathering." This ensures that the human candidate can allocate their limited bandwidth exclusively to high-leverage opportunities, shifting focus from searching to crafting the perfect application.
+
+
+**Research Context:**  
+This project also serves as the architectural pilot for **Real-World Data-Driven Synthetic Surveillance Dataset Generation Pipeline**. By treating video generation models and task-specific LoRAs as "Agents," the future research aims to leverage this same agentic workflow to significantly improve efficiency and reduce computational costs in synthetic data generation.
+
+---
 
 ## 📖 Introduction
 
-This project implements a **Hybrid AI Agent** powered by Google Gemini API, designed to leverage extensive user context to identify job descriptions that best fit my expertise.
+This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of-Advisors (MoA) pattern, where a Router Agent activates specialized LLM-based experts per JD and aggregates their assessments into strategic decisions. 
 
-Unlike purely local solutions, this system utilizes the state-of-the-art reasoning capabilities and long-context window of Gemini models to analyze my full background: including technical skills, financial goals, and visa constraints. It acts as an intelligent orchestrator that filters noise and provides strategic application advice, while keeping the core document storage (CVs/Databases) managed locally.
+Unlike infra-level sparse Mixture-of-Experts (MoE) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
+
+### 🚀 System Evolution: From V1 to V2.1
+While V1 follows a predefined routine to analyze JDs, V2.1 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
+
+The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy."
+
+#### V1 (Legacy): A Rigid "Smart Filter"
+   - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
+   - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
+   - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
+
+#### V2.2 (Current): An Active "Strategic Commander"
+
+This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
+
+- **Reason (Dynamic Mixture-of-Advisors (MoA))**:  
+  Introduces a Router Agent that dynamically assembles an Expert Council based on the JD's nature. For example, a "Senior Research Scientist" role triggers the Academic Analyst (evaluating research alignment) and the Engineering Lead (evaluating technical depth and team fit), while a startup role may additionally trigger the Startup Scout (equity/risk).
+
+- **Perceive (Tool-Augmented)**:  
+  Breaks the "internal bubble" by autonomously verifying salaries and retrieving relevant arXiv papers or team signals to ground analysis in external reality.
+
+- **Plan (MoA Advisory Battle Plans)**:  
+  Replaces generic feedback with concrete Battle Plans (e.g., "Fixing this self-supervised learning gap unlocks 15 positions"), aggregating multiple advisors’ perspectives into a single strategic recommendation rather than relying on a single all-purpose prompt.
+
+- **Act (Hard Triage on Constraints)**:  
+  Actively rejects non-viable roles (e.g., visa infeasibility, location/compensation mismatch, PhD relevance constraints) before they consume human attention or additional compute.
+
+   
+
+All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
+
+---
+
+
 
 ## 🏗️ System Architecture
 
 ```mermaid
 graph TD
-    User["User / Researcher"] -->|"1. Input JD Batch<br/>(Text / Screenshots)"| Agent["AI Agent Orchestrator<br/>(Gemini 1.5 Pro - Text & Vision)"]
+    %% === 全域 Council 資源池 (MoA) ===
+    subgraph Pool ["🏛️ The Reviewer Council Pool (MoA)"]
+        direction LR
+        E1["👔 HR Gatekeeper<br/>(Culture Fit, Soft Skills & Red Flags)"]:::council
+        E2["⚙️ Tech Lead<br/>(Tech Stack Depth & Hard Skills)"]:::council
+        E3["♟️ Strategist<br/>(ROI, Tax, Location Tier & Stability)"]:::council
+        E4["🛂 Visa Officer<br/>(Work Permit & Legal Feasibility)"]:::council
+        E5["🔬 Academic<br/>(Pubs, Research Impact & Innovation)"]:::council
+        E6["🏗️ Architect<br/>(Scalability, Cloud & Prod-Readiness)"]:::council
+        E7["🦁 Leadership<br/>(Mentorship & Cross-functional Influence)"]:::council
+        E8["🚀 Startup Vet<br/>(Equity, Risk & Multi-tasking)"]:::council
+    end
     
-    %% Local Database & Knowledge
-    subgraph "Local Knowledge Base"
-        ConstraintDB[("User Profile DB<br/>(AboutMe.md)")]
-        MasterCV[("Master CV & Paper DB<br/>(ChromaDB - RAG)")]
-        HistoryDB[("History Battle DB<br/>(Past JDs & Outcomes)")]
+    %% === LEVEL 0: 履歷軍火庫 ===
+    subgraph L0 ["Level 0: Pre-processing"]
+        ResumeDB[("🗄️ Resume Vector DB")]:::db
+        PersonalDB[("🗄️ Personal Vector DB")]:::db
+        IndexerCV["🤖 Indexer Agent"]:::agent
+        IndexerPK["🤖 Indexer Agent"]:::agent
+        
+        ResPDFs --> IndexerCV --> ResumeDB
+        AllFiles --> IndexerPK --> PersonalDB
+
+
     end
 
-    %% Phase 1: Ingestion & Recall
-    subgraph "Phase 1: Ingestion & Recall"
-        Agent <-->|"Load Values"| ConstraintDB
-        Agent -->|"Analyze & OCR"| JDs[("Raw JD Files")]
-        Agent <-->|"Semantic Search<br/>(Similarity Check)"| HistoryDB
+    %% === Phase 1: 戰場情報 ===
+    subgraph P1 ["Phase 1: Intelligence Gathering"]
+        Parser["JD Parser"]:::agent --> RawText[("📄 Raw Text")]
+        RawText --> Tools["🌍 External Tools"]:::agent
+        RawText & Tools --> Dossier["🗂️ Enriched Dossier"]:::doc
     end
 
-    %% Phase 2: Analysis
-    subgraph "Phase 2: Contextual Analysis"
-        HistoryDB -->|"Recall Lessons"| Agent
-        Agent <-->|"Retrieve Skills"| MasterCV
-        Agent -->|"Gap Analysis &<br/>Risk Assessment"| Insight[Structured Insight]
+    %% === Phase 2: 檢傷分類 ===
+    subgraph P2 ["Phase 2: Intelligent Triage"]
+        Dossier --> Triage["🏥 Triage Agent <br/> Hard Constraints Check(Visa)"]:::agent
+        PersonalDB -.-> Triage["🏥 Triage Agent <br/> Hard Constraints Reject(Visa/PhD)"]
+     
+        Triage -- "❌ Reject" --> RejectLog["📝 Rejected_Log.json<br/>(Brief Reason)"]:::output
+        RejectLog --> Bin["📂 /99_Trash"]
+
+        Triage -- "✅ Pass" --> FirstReport["FirstReport<br/>(Briefing for Council)"]:::doc
     end
 
-    %% Phase 3: Output
-    subgraph "Phase 3: Output"
-        Insight -->|"Drafting"| Writer[Content Generator]
-        Writer -->|"Output"| Report["Analysis Report (.md)<br/>& Leaderboard (.csv)"]
+    %% === Phase 3 流程 ===
+    subgraph P3 ["Phase 3: Expert Diagnosis"]
+        FirstReport --> Router["🔀 Council Router"]:::agent
+        Dossier --> Router
+
+        Router --> |"Calls"| ActivePanel
+        
+        subgraph ActivePanel ["🧑‍⚖️ Active Panel(Same Instance, Different Modes)"]
+            direction TB
+            Panel1["🔍 Skill Analysis Mode"]:::panel
+            Panel2["🧠 Gap & Effort Analysis Mode"]:::panel
+            Panel1 --> |"Search Queries"| Retriever["🤖 Retriever"]:::agent
+            Panel1 --> |"Requirement Context"|Panel2
+        end
+        
+        Dossier --> Panel2
+        
+        Retriever <-.-> |"Evidence/Chunks"| PersonalDB
+        Retriever <-.-> |"Reusable Sentences"| ResumeDB
+        Retriever --> |"Retrieved Material"| Panel2
     end
 
-    style Agent fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
-    style ConstraintDB fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
-    style MasterCV fill:#fff9c4,stroke:#fbc02d,stroke-width:2px,color:#000
-    style HistoryDB fill:#ffccbc,stroke:#d84315,stroke-width:2px,color:#000
-    style Report fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px,color:#000
-```
+    %% === Phase 4: 戰略地圖 ===
+    subgraph P4 ["Phase 4: Strategic Command"]
+        Panel2 --> Out["📊 Strategy Data (Blueprint)"]:::output
+        Out & FirstReport --> MapEngine["🗺️ Correlation Engine"]:::agent
+        MapEngine --> VisualMap["Visual Correlation Map"]
+        VisualMap --> TheGeneral["👮 Strategist"]:::agent
+        TheGeneral --> BattlePlan["📊 ImpactReport"]:::output
+    end
+
+    %% === Human Loop ===
+    BattlePlan --> UserCheck{"👤 User Review"}
+    UserCheck -- "Approve" --> BriefingAgent["⚡ Briefing Agent"]:::agent
+
+    UserCheck -- "Modify / Veto" --> Refine["Adjust Plan"]
+    Refine --> BriefingAgent
+
+    %% === Phase 5: 戰術執行 ===
+    subgraph P5 ["Phase 5: Campaign Output"]
+    Editor["👨‍🔬 Editor<br/>(Orgainize Suggestions, Conflict Resolution)"]:::council
+
+        BriefingAgent -->|"Cluster Context"| Panel3["👨‍🔬 Advisor Mode"]:::panel
+        PersonalDB -.->|"Personal Knowledge"| Panel3["👨‍🔬 Advisor Mode"]:::panel
+        ResumeDB -.->|"Past Resume"| Panel3["👨‍🔬 Advisor Mode"]:::panel
+        
+        Panel3["👨‍🔬 Advisor Mode"] --> Editor["✍️ Editor"]:::council
+
+        Editor --> OutputA["📂 /01_Campaign_Privacy<br/>- 📄 Strategy_Guide.md (Advice: Insert X objective in project A)<br/>- 📂 10 Target JDs"]:::output
+        Editor --> OutputB["📂 /02_Campaign_Infra<br/>..."]:::output
+    end
+
+    %% === 樣式定義 (跨模式相容) ===
+    classDef council fill:#e1bee7,stroke:#4a148c,color:#000;
+    classDef panel fill:#fff9c4,stroke:#fbc02d,color:#000;
+    classDef agent fill:#c8e6c9,stroke:#2e7d32,color:#000;
+    classDef db fill:#bbdefb,stroke:#1565c0,color:#000;
+    classDef doc fill:#f5f5f5,stroke:#616161,color:#000;
+    classDef output fill:#ffccbc,stroke:#d84315,color:#000;
+``` 
+
+
 
 ## 🚀 Key Features
-1.  **SOTA Semantic Filtering:**
-    * Leverages **Google Gemini's** advanced reasoning to understand subtle nuances in JDs (e.g., distinguishing between "required" vs. "nice-to-have" skills), surpassing local models.
-2.  **Multimodal Ingestion with Smart Caching:**
-    * **Vision Capabilities:** Capable of processing **non-text inputs** (e.g., screenshots of job posts, scanned PDFs) using Gemini's vision model.
-    * **Cost-Optimized:** Implements a **"Read-Once" policy**. Extracted text is automatically serialized and saved locally (`.txt`) to reduce API latency.
-3.  **Context-Aware Planning (RAG):**
-    * Dynamically retrieves the most relevant project experiences from a local personal database based on the specific requirements of the target position.
-4.  **"War Room" Architecture (V1.1 - Closed-Loop History):**
-    * **Battle Archive:** Automatically indexes the lifecycle of every application (JD + Resume Version + Outcome) into a local vector store.
-    * **Active Recall:** When analyzing a new JD, the agent performs a semantic search against this "Battle Archive."
-    * **Tactical Warning:** If a similar past application is found, the agent proactively retrieves the specific outcome (e.g., "Rejected due to Visa") to warn the user or suggest successful strategies from the past.
+#### 1. The Arsenal: Semantic Resume Indexing (Level 0)
+   * **Pre-processing Agent:** An asynchronous `Indexer Agent` breaks down the user's Master CV and Papers into semantic fragments tagged by attributes (e.g., `#Privacy`, `#ComputerVision`, `#Leadership`).
+   * **Vector-Based Retrieval:** Uses **ChromaDB** to retrieve only the relevant "skills blocks" needed for a specific JD, preventing context window pollution with irrelevant experiences.
+
+#### 2. Tool-Augmented Intelligence (Phase 1)
+   * **External Grounding:** The system actively gathers external context to "comprehend" the JD before analysis.
+   * **Active Tools:**
+      - **Salary Validator:** Queries external sources (mock Levels.fyi/Glassdoor) to verify if the ROI justifies the effort.
+      - **Team Investigation:** Searches arXiv/Google Scholar to verify if the hiring team is scientifically active.
+
+#### 3. Intelligent Triage & Gatekeeping (Phase 2)
+   * **Hard Constraints Check:** A strict "Gatekeeper Agent" enforces physical survival constraints first.
+   * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (EU Work Permit), **PhD Relevance**, and **Expertise mis-Matched** constraints.
+   * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the analysis pipeline.
+   * **Implementation Status**: Implemented as ``TriageAgent`` in ``src/phases/p2_triage.py``. Each dossier is enriched with a structured triage_result block (e.g., ``decision``, ``reason``, ``domain_mismatch``), and only dossiers that pass this gate are moved into the pending_council queue for downstream MoA routing.
+
+#### 4. Dynamic Mixture-of-Agents (Phase 3)
+* **Router-Based Diagnosis**: Instead of a single generic "Analysis Prompt", a Router Agent activates a small set of specialized reviewers based on the JD's domain and seniority.
+    Example of the Council Members:
+    - **Academic Analyst**: For research‑heavy roles (e.g., Research Scientist; focus: publication track record, topic alignment, lab/team fit).
+    - **Engineering Lead**: For ML/Software roles (focus: deployment readiness, C++/systems skills, production constraints).
+    - **Startup Scout**: For early‑stage companies (focus: equity vs. cash trade‑offs, runway, product risk, role ambiguity).
+* **Benefit**: Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
+* **Implementation Status**: Implemented as a single-pass council: for each JD, the Router selects a number of advisors and calls each exactly once, storing their scores and rationales back into the dossier. There is no multi-round debate at this stage due to API cost.
+* **Planned Enhancement**: A lightweight keyword-only ```user_profile.json`` will be introduced to pre-filter obviously mismatched JDs (e.g., hard skills that are completely absent) before invoking the council, further reducing large-model calls.
+
+Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
+
+        
+#### 5. Strategic Clustering (Phase 4 - The War Room)
+   * **Adaptive DBSCAN Engine:** Uses semantically-aware density clustering (e.g., HDBSCAN) to group jobs based on text embedding similarity. The hyperparameters are selected automatically (knee point) that dynamically calculates the optimal `eps` distance, ensuring clusters are tight and meaningful without manual guessing.
+    * **Flavor Extraction:** Summarize the common skill domain of each cluster (e.g., *"Cluster 0: GenAI Security"*, *"Cluster 1: ML Infrastructure"*) by analyzing common keywords in the vector space.
+    * **Battle Plan Generation:** Outputs a structured JSON map (`battle_plan.json`) ranking clusters by **ROI Score** (Cluster Size × Average Match Score), separating high-value targets from "Noise" (outliers).
+
+
+#### 6. Advisory Briefing Agent (Phase 5)
+Phase 5 is not just an advisor; it is the **Chief Editor**. It synthesizes the "Expert Demands" (from Phase 3) with the "Candidate's Ammo" (Resume Database) to generate a copy-paste ready execution plan.
+* **Comprehensive Execution Plan:** Instead of a fixed-length list, the Editor generates a dynamic, exhaustive list of directives to cover ALL expert demands and showcase power moves:
+  * **REUSE:** Identifies perfect matches in the existing resume bullets.
+  * **TWEAK:** Injects specific keywords (e.g., *"Change 'Cloud' to 'AWS EKS'"*) into existing bullets.
+  * **NEW:** Drafts brand-new "Gap Filler" bullets using transferable skills (STAR format).
+  * **LETTER:** Suggests narrative angles for the Cover Letter.
+ * **Conflict Resolution Core:** Applies a strict "Editor-in-Chief" philosophy (e.g., *Technical Depth > HR Fluff*, *Safety > Risk*) to resolve conflicting advice from different experts.
+
 
 ## ⚡ Quick Start & Setup
 
@@ -85,28 +231,48 @@ Start the Docker container in detached mode: ```docker-compose up -d --build```
 
 4. Memory Injection (Initialization)
 
-    **Phase 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
-    * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/ingest.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
+    **Step 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
+    * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/data/ingest.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingest_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
+    * **[NEW] Generate Tech Cheat Sheet (The Gatekeeper):**
+        * Use **NotebookLLM** to summarize your `AboutMe.md` + `Resume` into a raw JSON.
+        * Save it as `src/data/user_profile.json`.
+        * *Purpose:* This allows the system to pre-filter mismatched JDs using the lightweight Gemma model, saving precious Flash quota for deep analysis.
 
-    **Phase 2**: The Hunt (Routine) <br>
-    Execute this loop when adding new JDs.
+    **Step 2**: The Hunt <br>(V2.2 pipeline – Phase 1–3 are currently run via phase scripts, `main.py` remains V1 legacy)
     * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
-    * Hunt: Run the main orchestrator.<br> ```docker-compose run --rm orchestrator python src/main.py``` 
+    * Phase 1–3 (current V2.2 workflow):  
+        * _Run the phase scripts explicitly (until they are fully integrated into `src/main.py` in a later update)._  
+        * ```bash
+            # Phase 1: Tool-augmented JD parsing
+            docker-compose run --rm orchestrator python src/phases/p1_intel.py
+
+            # Phase 2: Triage & Gatekeeping
+            docker-compose run --rm orchestrator python src/phases/p2_triage.py
+
+            # Phase 3: MoA Council (dynamic advisors)
+            docker-compose run --rm orchestrator python src/phases/p3_council.py
+            ```
     * Review: Check the output in ```data/reports/```:
         * ```Strategic_Leaderboard.csv```: Prioritize applications.
         * ```Analysis_*.md```: Read detailed strategy & warnings.
+        * These reports are directly produced by the multi-phase pipeline (Triage, MoA council, War Room) implemented under src/phases/.
+    * Note: src/main.py currently runs the legacy V1 pipeline. V2.2 integrates Phase 1~3 as separate scripts under ``src/phases/`` and will be merged back into main.py in a future refactor.
 
-    **Phase 3**: Post-Battle Maintenance<br> When you receive an outcome (Reject/Interview):
+    **Step 3**: Post-Battle Maintenance<br> When you receive an outcome (Reject/Interview):
     * Move the JD folder from Ongoing to Rejected (on your local drive).
     * Add an ```result.txt``` or ```reject_letter.txt``` inside the folder.
     * Run Ingest History again to update the agent's memory:<br>```docker-compose run --rm orchestrator python src/ingest_history.py```
 
 ## 🛠️ Tech Stack
 * **Orchestration:** Python, Google Generative AI SDK (Gemini API)
-* **Model:** Gemma-3-12b
+* **Hybrid Model Architecture (Smart Gateway):**
+    * **Logic & Extraction:** Gemma-3-27b-it (Larger Quota)
+    * **Long-Context Retrieval:** Gemini-2.5-Flash (High TPM, Daily Limit Optimized)
+    * **Reliability:** Pydantic for Structured Output enforcement (JSON Schema Validation) 🛡️
 * **Vector Store:** ChromaDB (Using default `all-MiniLM-L6-v2` for local embeddings)
 * **Environment:** Python 3.11 / Docker
+
 
 ## 📂 Data Structure
 The system automatically manages raw inputs and cached outputs:
@@ -128,8 +294,8 @@ data/
     └── rejected/         # Past Failures (For Post-Mortem Recall)
 ```
 
-## 🔮 Future Roadmap: Automated Optimization (V2.0)
-Currently, the system serves as an intelligent advisor that *recalls* history. The V2.0 objective is to implement **Reinforcement Learning (RL)** logic to let the agent *learn* from history independently.
+## 🔮 Future Roadmap: Automated Optimization (V3.0)
+Currently, the system serves as an intelligent advisor that *recalls* history. The V3.0 objective is to implement **Reinforcement Learning (RL)** logic to let the agent *learn* from history independently.
 
 ### Planned Capabilities
 * **Global Trend Analysis (Beyond One-to-One):**
