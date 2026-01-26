@@ -1,8 +1,9 @@
 # Job Hunting Season 2: Agentic Career Orchestrator 
 #### An ROI-Driven Multi-Agent System
 **Not a ghostwriter, just an assistant and probably strategist**
-> **Current Status:** V2.2 Design Phase (Architecture Validated / Implementation In Progress)
+> **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
+
 
 ## 🎯 Motivation
 
@@ -27,17 +28,17 @@ This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of
 
 Unlike infra-level sparse Mixture-of-Experts (MoE) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
 
-### 🚀 System Evolution: From V1 to V2.1
-While V1 follows a predefined routine to analyze JDs, V2.1 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
+### 🚀 System Evolution: From v1 to v2
+While v1 follows a predefined routine to analyze JDs, v2 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
 
 The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy."
 
-#### V1 (Legacy): A Rigid "Smart Filter"
+#### v1 (Legacy): A Rigid "Smart Filter"
    - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
    - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
    - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
 
-#### V2.2 (Current): An Active "Strategic Commander"
+#### v2 (Current): An Active "Strategic Commander"
 
 This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
 
@@ -248,9 +249,9 @@ docker-compose up -d --build
         * Save it as `src/data/user_profile.json`.
         * *Purpose:* This allows the system to pre-filter mismatched JDs using the lightweight Gemma model, saving precious Flash quota for deep analysis.
 
-    **Step 2**: The Hunt <br>(V2.2 pipeline – Phase 1–3 are currently run via phase scripts, `main.py` remains V1 legacy)
+    **Step 2**: The Hunt <br>(v2 pipeline – Phase 1–3 are currently run via phase scripts, `main.py` remains v1 legacy)
     * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
-    * Phase 1–3 (current V2.2 workflow):  
+    * Phase 1–3 (current v2 workflow):  
         * _Run the phase scripts explicitly (until they are fully integrated into `src/main.py` in a later update)._  
             ```bash            
             # Phase 1: Tool-augmented JD parsing
