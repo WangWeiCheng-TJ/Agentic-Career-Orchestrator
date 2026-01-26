@@ -2,6 +2,7 @@
 #### An ROI-Driven Multi-Agent System
 **Not a ghostwriter, just an assistant and probably strategist**
 > **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational
+
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
 
