@@ -79,25 +79,33 @@ class PromptFactory:
         """
         產生 Editor (主編) 的 Prompt
         """
-        # A. 取得 Editor Config
-        editor_config = self.personas.get("EDITOR")
+        # A. 取得 Editor Config (優先從你的設定檔讀取)
+        # 假設 self.personas 是你載入的 persona.json
+        editor_config = getattr(self, 'personas', {}).get("EDITOR")
+        
+        # B. 如果讀不到 Config，Fallback 使用你原本定義的高級設定
         if not editor_config:
-            # Fallback: 如果 json 裡沒寫 EDITOR，給個預設值以免 crash
             editor_config = {
                 "role_name": "Editor-in-Chief",
                 "role_icon": "✍️",
-                "philosophy": "Synthesize and resolve conflicts."
+                "focus_area": "Synthesis, Conflict Resolution & Final Polish",
+                "philosophy": "I am the decision maker. I filter noise, resolve conflicts between experts (prioritizing Tech over HR for tech roles), and produce a coherent, strategic narrative."
             }
 
-        # B. 準備變數
+        # C. 準備變數
+        # 將你的 Persona 設定 與 Context 融合
         render_vars = {
+            # 這會展開: role_name, role_icon, philosophy, focus_area
             **editor_config,
-            **context_data,
-            "council_opinions": council_opinions, # 這是 E1~E8 的分析報告列表
-            "editor_schema": EDITOR_SCHEMA        # 注入 Editor Schema
+            
+            # 這會展開: company, role, resume_text
+            **context_data, 
+            
+            # 這是 E1~E8 的分析報告 (給 Jinja2 跑迴圈用)
+            "council_opinions": council_opinions, 
         }
 
-        # C. 渲染模板
+        # D. 渲染模板
         try:
             template = self.env.get_template("editor_prompt.md.j2")
             return template.render(render_vars)

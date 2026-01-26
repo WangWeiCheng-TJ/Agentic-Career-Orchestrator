@@ -1,5 +1,6 @@
 # Job Hunting Season 2: Agentic Career Orchestrator 
 #### An ROI-Driven Multi-Agent System
+**Not a ghostwriter, just an assistant and probably strategist**
 > **Current Status:** V2.2 Design Phase (Architecture Validated / Implementation In Progress)
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
@@ -202,15 +203,19 @@ Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑a
 
         
 #### 5. Strategic Clustering (Phase 4 - The War Room)
-   * **Correlation Engine:** Cross validate JDs to compute the correlations between to help prioritise applications.
-   * **Battle Plans:** Instead of 15 separate resume edits, the system generates a unified strategy (e.g., *"Injecting [Self-Supervised Learning] insights into Project A will have positive impact on these 12 JDs"*).
-   * **Implementation Status**: Currently aggregates advisor scores and gap tags per JD into a ``Strategic_Leaderboard.csv``, ranking opportunities by a simple ROI heuristic. Clustering is greedy and intentionally minimal.
-   * **Planned Enhancement**: For small batches of JDs, a high-context LLM call (e.g., Gemini Flash) will directly ingest all council reports in one shot to synthesize global “template-first” strategies, without manual correlation code.
+   * **Adaptive DBSCAN Engine:** Uses semantically-aware density clustering (e.g., HDBSCAN) to group jobs based on text embedding similarity. The hyperparameters are selected automatically (knee point) that dynamically calculates the optimal `eps` distance, ensuring clusters are tight and meaningful without manual guessing.
+    * **Flavor Extraction:** Summarize the common skill domain of each cluster (e.g., *"Cluster 0: GenAI Security"*, *"Cluster 1: ML Infrastructure"*) by analyzing common keywords in the vector space.
+    * **Battle Plan Generation:** Outputs a structured JSON map (`battle_plan.json`) ranking clusters by **ROI Score** (Cluster Size × Average Match Score), separating high-value targets from "Noise" (outliers).
+
 
 #### 6. Advisory Briefing Agent (Phase 5)
-   * **Strategy over Generation:** The system acts as a **Chief of Staff**, delivering a `Strategy_Guide.md` ("The What and Why") rather than just ghostwriting the resume ("The How").
-   * **Actionable Insights:** Provides specific directives like *"Highlight Paper X to counter the lack of Spark experience,"* preserving the user's authentic voice.
-   * **Implementation Status**: Generates per-JD ``Analysis_*.md`` files and a consolidated ``Strategy_Guide.md`` summarizing priorities and recurring gaps. Advanced portfolio-level optimization and RL-style learning are reserved for V3.0.
+Phase 5 is not just an advisor; it is the **Chief Editor**. It synthesizes the "Expert Demands" (from Phase 3) with the "Candidate's Ammo" (Resume Database) to generate a copy-paste ready execution plan.
+* **Comprehensive Execution Plan:** Instead of a fixed-length list, the Editor generates a dynamic, exhaustive list of directives to cover ALL expert demands and showcase power moves:
+  * **REUSE:** Identifies perfect matches in the existing resume bullets.
+  * **TWEAK:** Injects specific keywords (e.g., *"Change 'Cloud' to 'AWS EKS'"*) into existing bullets.
+  * **NEW:** Drafts brand-new "Gap Filler" bullets using transferable skills (STAR format).
+  * **LETTER:** Suggests narrative angles for the Cover Letter.
+ * **Conflict Resolution Core:** Applies a strict "Editor-in-Chief" philosophy (e.g., *Technical Depth > HR Fluff*, *Safety > Risk*) to resolve conflicting advice from different experts.
 
 
 ## ⚡ Quick Start & Setup

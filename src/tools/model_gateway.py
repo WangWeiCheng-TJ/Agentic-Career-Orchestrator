@@ -82,6 +82,23 @@ def parse_gemma_tags(raw_text: str) -> dict:
             }
             results.append(item)
 
+        # [Phase 5 Editor Detection] 
+        # 偵測是否有 SOURCE (REUSE/NEW) 和 CONTENT
+        elif "SOURCE" in block and "CONTENT" in block:
+             detected_type = "EDITOR"
+             
+             # 提取 ID (有些 LLM 會寫 ID: 1, 有些是 #1)
+             raw_id = extract("ID|NUM|NO")
+             
+             item = {
+                 "ID": raw_id if raw_id else str(len(results) + 1),
+                 "TOPIC": extract("TOPIC|FOCUS"),
+                 "SOURCE": extract("SOURCE|TYPE"), # 預期是 REUSE, TWEAK, NEW, COVER_LETTER
+                 "CONTENT": extract("CONTENT|SENTENCE|BULLET"),
+                 "NOTE": extract("NOTE|REASON")
+             }
+             results.append(item)
+
         # [Phase 1 Default] 預設為 Skill Extraction
         else:
             detected_type = "SKILL"
@@ -102,6 +119,8 @@ def parse_gemma_tags(raw_text: str) -> dict:
         return {"gap_analysis": results}
     elif detected_type == "ADVISOR":
         return {"strategic_advice": results}
+    elif detected_type == "EDITOR":
+        return {"editor_plan": results}
     else:
         return {"required_skills": results}
 
