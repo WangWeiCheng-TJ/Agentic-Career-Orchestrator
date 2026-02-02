@@ -54,6 +54,18 @@ class WarRoomEditor:
             cprint(f"❌ DB Error: {e}", "red")
             self.resume_content = "[ERROR LOADING RESUME DB]"
             return False
+
+        # === [NEW] 3. Load User Profile ===
+        cprint("📥 Fetching User Profile...", "cyan")
+        try:
+            # 使用 db_connector 的 fallback 邏輯 (manual → auto → ChromaDB)
+            self.user_profile = self.db_connector.get_user_profile()
+            
+            if not self.user_profile or self.user_profile == "{}":
+                cprint("⚠️ Warning: User profile is empty!", "yellow")
+        except Exception as e:
+            cprint(f"⚠️ User Profile Error: {e}", "yellow")
+            self.user_profile = "{}"
             
         return True
 
@@ -196,6 +208,7 @@ class WarRoomEditor:
         # cprint(f"  📜 Loading Prompt Template...", "cyan") # 這行太吵可以拿掉
         prompt = self.prompt_manager.create_editor_prompt(
             council_opinions=council_opinions,
+            user_profile=self.user_profile,
             context_data={
                 "company": company,
                 "role": role,
