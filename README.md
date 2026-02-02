@@ -199,9 +199,9 @@ graph TD
 
 - **Benefit**: Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
 
-- **Implementation Status**: 
+- **New Implementation**: 
   - **Core System**: Implemented as a single-pass council. For each JD, the Router selects specialized advisors and calls each exactly once, storing their scores and rationales back into the dossier. No multi-round debate at this stage due to API cost.
-  - **✅ Pre-filtering Optimization**: A lightweight `user_profile.json` pre-filters obviously mismatched JDs (e.g., hard skills that are completely absent) using the Gemma model before invoking the expensive council, significantly reducing large-model API calls.
+  - **User Profile Integration**: ✅ User Profile Integration: Phase 3 and Phase 5 can optionally use user_profile.json (manual or auto-generated) for faster context retrieval, with automatic fallback to ChromaDB if unavailable; significantly reducing large-model API calls.
 
 Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
 
@@ -244,10 +244,13 @@ docker-compose up -d --build
 
     **Step 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
     * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/ingests/personal_data.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
-    * **[Advanced] Generate Tech Cheat Sheet (The Gatekeeper):**
-        * Use **NotebookLLM** to ingest your ``AboutMe.md`` + personal background and ask it to output a raw JSON summary.
-        * Save it as `src/data/user_profile.json`.
-        * *Purpose:* NotebookLLM excels at handling long-context windows, producing a holistic "Meta-Summary" of your career that standard chunk-based RAG might miss.
+    * **[Optional] User Profile Acceleration:**
+        * Option A (Manual): Use NotebookLLM to generate a structured profile from your ``AboutMe.md``:
+            - Save it as `src/raw/user_profile.json`.
+            - This acts as a "cheat sheet" for Phase 3 and Phase 5, avoiding ChromaDB queries
+            - *Purpose:* NotebookLLM excels at handling long-context windows, producing a holistic "Meta-Summary" of your career that standard chunk-based RAG might miss.
+        * Option B (Auto): If you skip this step, the system will automatically generate ``auto_generated_user_profile.json`` from your raw data during ingestion
+        * Fallback: If neither exists, the system will query ChromaDB on-the-fly (slower but functional)
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingests/resume_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
 
     **Step 2**: The Hunt <br>(v2 pipeline - Phase 1-3 are currently run via phase scripts, `main.py` remains v1 legacy)
@@ -301,19 +304,21 @@ The system automatically manages raw inputs and cached outputs:
 
 ```text
 data/
-├── chroma_db/            # Vector Database (User Profile & History Index)
-├── raw/                  # Personal Knowledge Base
-│   ├── AboutMe.md        # Dynamic User Values (Money, Visa, Location)
-│   └── cv_papers.pdf     # Resume & Academic Papers
-├── jds/                  # Input: New JDs to Analyze
+├── chroma_db/                              # Vector Database (User Profile & History Index)
+├── raw/                                    # Personal Knowledge Base
+│   ├── AboutMe.md                          # Dynamic User Values (Money, Visa, Location)
+│   ├── user_profile.json                   # NotebookLLM-based resume
+│   ├── auto_generated_user_profile.json    # [Auto]
+│   ...                                     # Other files to be considered
+├── jds/                                    # Input: New JDs to Analyze
 │   ├── position_A.pdf
-│   └── position_A.txt    # Cached OCR/Text Result
-├── reports/              # Output: Analysis Reports
+│   └── position_A.txt                      # Cached OCR/Text Result
+├── reports/                                # Output: Analysis Reports
 │   ├── Analysis_A.md
 │   └── Strategic_Leaderboard.csv      
-└── history/              # Historical Battle Data
-    ├── ongoing/          # Active Applications
-    └── rejected/         # Past Failures (For Post-Mortem Recall)
+└── history/                                # Historical Battle Data
+    ├── ongoing/                            # Active Applications
+    └── rejected/                           # Past Failures (For Post-Mortem Recall)
 ```
 
 ## 🔮 Future Roadmap: Automated Optimization (V3.0)
