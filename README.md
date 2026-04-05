@@ -34,8 +34,7 @@ All core document storage (CVs, personal databases) remains **locally managed** 
 #### From v2 to v3
 > Transition from a single‑node batch pipeline to a cloud‑ready, large‑scale parallel orchestration layer across AWS/GCP.
 
-The v2 architecture already introduced a tiered Mixture‑of‑Advisors flow, but execution remained essentially single‑node and sequential. v3 decouples the system into **data‑parallel intake workers (Phase 1-2)** and a **planner‑plus‑parallel‑advisors council (Phase 3)** that can be scaled out as independent services on AWS/GCP. This preserves the privacy‑first, local‑ChromaDB design while making the JD filtering and expert‑council reasoning layers ready for high‑volume, cloud‑scale workloads.
-
+The v2 architecture already introduced a tiered Mixture‑of‑Advisors flow, but execution remained essentially single‑node and sequential. v3 reuses a single orchestration image across local and cloud runtimes, with phase-specific workers launched via different commands but governed by shared input/output schemas. Scalable intake(*data‑parallel intake workers (Phase 1-2)*) and expert-council reasoning(*planner‑plus‑parallel‑advisors council (Phase 3)*) run on AWS/GCP, while the resulting dossiers are synchronized back to the local environment for downstream clustering and execution planning.
 
 #### From v1 to v2
 > Transition from Mega-prompting to a orchastration framework with Mixture-of-Agents, enhancing Context-Awareness through Attention Partitioning while optimizing cost for both tokens and expensive LLM models.
@@ -48,6 +47,18 @@ The _naive PoC_, mega prompting, is essentially wasting tokens of advanced LLM m
     <summary>
      Cloud-Ready Large-Scale Parallel Processing (AWS / GCP)
     </summary>
+
+- **Sequential-to-parallel expert execution**:
+v2 already routes dossiers to relevant experts, but executes each expert call sequentially via per-expert loops; v3 upgrades this into parallelizable advisor jobs for scalable cloud execution. Decomposes Phase 3 into a planner → dual parallel fan-out → aggregator pipeline, where expert skill extraction and gap analysis are executed concurrently across the selected advisor set before being consolidated into a final council report.
+
+- **Single-image, multi-role deployment**:
+The orchestration framework is packaged as a reusable container image, where phase-specific roles are launched by overriding runtime commands rather than maintaining separate stacks.
+
+- **Persistent council artifacts for downstream phases**
+Instead of only mutating in-place dossier files, v3 formalizes council outputs as reusable artifacts that can be pulled back into local Phase 4/5 workflows.
+
+- **Cloud execution templates for AWS/GCP**
+v3 introduces cloud-ready command templates and deployment patterns so the same image can run on local machines, AWS, or GCP with shared schemas and phase boundaries.
 </details>
 
 ##### 🧑‍⚖️ v2 (Current): Summon the Expert Council
@@ -75,6 +86,7 @@ This upgrade transforms the system from a passive analyzer to an active decision
     <summary>
  A Rigid "Smart Filter"
     </summary>
+
 - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
 - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
 - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
@@ -346,8 +358,8 @@ data/
     └── rejected/                           # Past Failures (For Post-Mortem Recall)
 ```
 
-## 🔮 Future Roadmap: Automated Optimization (V3.0)
-Currently, the system serves as an intelligent advisor that *recalls* history. The V3.0 objective is to implement **Reinforcement Learning (RL)** logic to let the agent *learn* from history independently.
+## 🔮 Future Roadmap: Automated Optimization (v4.0)
+Currently, the system serves as an intelligent advisor that *recalls* history. The v4.0 objective is to implement **Reinforcement Learning (RL)** logic to let the agent *learn* from history independently.
 
 ### Planned Capabilities
 * **Global Trend Analysis (Beyond One-to-One):**
