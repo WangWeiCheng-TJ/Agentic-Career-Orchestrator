@@ -1,8 +1,7 @@
 # Job Hunting Season 2: Agentic Career Orchestrator 
 #### An ROI-Driven Multi-Agent System
 **Not a ghostwriter, just an assistant and probably strategist**
-> **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational
-> **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
+> **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational; v3 in dev.
 
 
 ## 🎯 Motivation
@@ -28,27 +27,33 @@ This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of
 
 Unlike infra-level sparse Mixture-of-Agents (MoA) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
 
-### 🚀 System Evolution: From v2 to v3
+All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
+
+### 🚀 System Evolution
+
+#### From v2 to v3
+> Transition from a single‑node batch pipeline to a cloud‑ready, large‑scale parallel orchestration layer across AWS/GCP.
+
+The v2 architecture already introduced a tiered Mixture‑of‑Advisors flow, but execution remained essentially single‑node and sequential. v3 decouples the system into **data‑parallel intake workers (Phase 1-2)** and a **planner‑plus‑parallel‑advisors council (Phase 3)** that can be scaled out as independent services on AWS/GCP. This preserves the privacy‑first, local‑ChromaDB design while making the JD filtering and expert‑council reasoning layers ready for high‑volume, cloud‑scale workloads.
 
 
+#### From v1 to v2
+> Transition from Mega-prompting to a orchastration framework with Mixture-of-Agents, enhancing Context-Awareness through Attention Partitioning while optimizing cost for both tokens and expensive LLM models.
 
-### 🚀 System Evolution: From v1 to v2
-While v1 follows a predefined routine to analyze JDs, v2 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
+The _naive PoC_, mega prompting, is essentially wasting tokens of advanced LLM models while risking attention dilution. Considering a larger scale of usage (particularly when applied to synthetic dataset generation), the system is decoupled into a **tiered inference**, **Multi-Agent** system where a Router Agent executes an OODA loop to ground strategic analysis in real-world technical signals. Eventually, the filtering phase of the **orchestration** system filtered out the JDs that dont fit the hard constraints, while the other JDs are analyzed by an **expert council with dynamic members** to provide feedback and suggestions accordingly.
 
-The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy."
 
+##### ☁️ v3 (Ongoing): Time to Scale Up
 <details>
     <summary>
-#### v1 (Legacy): A Rigid "Smart Filter"
+     Cloud-Ready Large-Scale Parallel Processing (AWS / GCP)
     </summary>
-   - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
-   - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
-   - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
 </details>
 
+##### 🧑‍⚖️ v2 (Current): Summon the Expert Council
 <details>
     <summary>
-#### v2 (Current): An Active "Strategic Commander"
+    Observe, Orient, Decide, and Act: Decision orchestration with a dynamic MoA
     </summary>
 This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
 
@@ -64,9 +69,20 @@ This upgrade transforms the system from a passive analyzer to an active decision
 - **Act (Hard Triage on Constraints)**:  
   Actively rejects non-viable roles (e.g., visa infeasibility, location/compensation mismatch, PhD relevance constraints) before they consume human attention or additional compute.
 </details>
+
+##### 🧩 v1 (Legacy): The Naive Way
+<details>
+    <summary>
+ A Rigid "Smart Filter"
+    </summary>
+   - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
+   - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
+   - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
+</details>
    
 
-All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
+
+
 
 ---
 
