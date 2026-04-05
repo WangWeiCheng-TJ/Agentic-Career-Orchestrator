@@ -2,7 +2,6 @@
 #### An ROI-Driven Multi-Agent System
 **Not a ghostwriter, just an assistant and probably strategist**
 > **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational
-
 > **Role:** Research Pilot for [Physically-Aware Synthetic Surveillance Data]
 
 
@@ -25,22 +24,32 @@ This project also serves as the architectural pilot for **Real-World Data-Driven
 
 ## 📖 Introduction
 
-This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of-Advisors (MoA) pattern, where a Router Agent activates specialized LLM-based experts per JD and aggregates their assessments into strategic decisions. 
+This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of-Advisors (MoA) pattern, where a Router Agent activates specialized LLM-based agents per JD and aggregates their assessments into strategic decisions. 
 
-Unlike infra-level sparse Mixture-of-Experts (MoE) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
+Unlike infra-level sparse Mixture-of-Agents (MoA) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
+
+### 🚀 System Evolution: From v2 to v3
+
+
 
 ### 🚀 System Evolution: From v1 to v2
 While v1 follows a predefined routine to analyze JDs, v2 introduces a decentralized Multi-Agent Architecture designed for strategic resource allocation.
 
 The core evolution lies in moving from "1-to-1 Analysis" to "1-to-Many Strategy."
 
+<details>
+    <summary>
 #### v1 (Legacy): A Rigid "Smart Filter"
+    </summary>
    - **Fixed Linear Protocol**:<br> Processed data under a hard-coded procedure (Step A → B → C) regardless of the job context, lacking the autonomy to activate specific tools or skip unnecessary steps.
    - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
    - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
+</details>
 
+<details>
+    <summary>
 #### v2 (Current): An Active "Strategic Commander"
-
+    </summary>
 This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
 
 - **Reason (Dynamic Mixture-of-Advisors (MoA))**:  
@@ -54,7 +63,7 @@ This upgrade transforms the system from a passive analyzer to an active decision
 
 - **Act (Hard Triage on Constraints)**:  
   Actively rejects non-viable roles (e.g., visa infeasibility, location/compensation mismatch, PhD relevance constraints) before they consume human attention or additional compute.
-
+</details>
    
 
 All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
