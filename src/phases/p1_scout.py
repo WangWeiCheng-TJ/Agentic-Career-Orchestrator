@@ -8,6 +8,10 @@ from termcolor import colored, cprint
 import google.generativeai as genai
 from tqdm import tqdm  # [New] 進度條
 
+# === parallel
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 # === IMPORTS ===
 import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
@@ -39,6 +43,60 @@ if not os.path.exists(DIR_INCOMING):
 # [測試設定] 設定為整數 (e.g., 3) 只跑前 3 筆。設定為 None 則跑全部。
 TEST_LIMIT = None 
 
+# ==========================================
+# 🔧 Worker Function
+# ==========================================
+def _scout_worker(filepath, parser, tools):
+    """單一 PDF 的處理 worker，給 ThreadPoolExecutor 用"""
+    filename = os.path.basename(filepath)
+    
+    try:
+        # Step A: 讀檔
+        text, used_ocr = extract_text_from_pdf(filepath, model_name=MODEL_NAME)
+        if not text or len(text) < 50:
+            tqdm.write(colored(f"❌ Read Error (Skipping): {filename}", "red"))
+            return None
+
+        # Step B: 解析（parser 內部會走 gateway，rate limit 自動套用）
+        parsed_data = parser.parse(text, filename)
+
+        # Step C: 情報增強
+        try:
+            intel_report = tools.run_tools(parsed_data)
+        except Exception as e:
+            tqdm.write(colored(f"⚠️ Tool Error [{filename}]: {e}", "yellow"))
+            intel_report = "Tool execution failed."
+
+        # Step D: 打包
+        dossier = {
+            "id": f"job_{int(time.time())}_{filename[:10]}",
+            "metadata": {
+                "source": filename,
+                "scanned_at": datetime.now().isoformat(),
+                "ocr_used": used_ocr,
+                "parser_version": "v3.3"
+            },
+            "basic_info": parsed_data,
+            "intelligence_report": intel_report,
+            "raw_content": text
+        }
+
+        # Step E: 存檔
+        output_filename = f"{os.path.splitext(filename)[0]}_dossier.json"
+        output_path = os.path.join(DIR_PROCESSED, output_filename)
+        with open(output_path, "w", encoding="utf-8") as f:
+            json.dump(dossier, f, indent=2, ensure_ascii=False)
+
+        role = parsed_data.get('role', 'Unknown')
+        company = parsed_data.get('company', 'Unknown')
+        ocr_tag = colored(" [OCR]", "magenta") if used_ocr else ""
+        tqdm.write(colored(f"✅ Saved: {company} - {role}", "green") + ocr_tag)
+        return filename
+
+    except Exception as e:
+        tqdm.write(colored(f"❌ Worker Error [{filename}]: {e}", "red"))
+        return None
+
 def run_scout():
     # 顯示目前模式
     mode_msg = f"(Testing Mode: First {TEST_LIMIT} files)" if TEST_LIMIT else "(Full Batch Mode)"
@@ -68,67 +126,20 @@ def run_scout():
     cprint(f"📂 Found {len(all_files)} files. Processing {len(target_files)}...", "white")
     print("-" * 40)
 
-    # 3. 進度條迴圈
-    # unit='jd' 讓進度條單位顯示為 jd
-    pbar = tqdm(target_files, desc="🚀 Scouting", unit="jd")
-
-    for filepath in pbar:
-        filename = os.path.basename(filepath)
-        
-        # 更新進度條右側資訊
-        pbar.set_postfix(file=filename[:15])
-
-        # Step A: 讀檔
-        text, used_ocr = extract_text_from_pdf(filepath, model_name=MODEL_NAME)
-        
-        if not text or len(text) < 50:
-            tqdm.write(colored(f"❌ Read Error (Skipping): {filename}", "red"))
-            continue
-
-        # Step B: 解析 (Update description to show status)
-        pbar.set_description(f"🤖 AI Parsing...")
-        parsed_data = parser.parse(text, filename)
-        
-        # Step C: 情報增強
-        pbar.set_description(f"🌍 Enriching...")
-        try:
-            intel_report = tools.run_tools(parsed_data)
-        except Exception as e:
-            tqdm.write(colored(f"⚠️ Tool Error: {e}", "yellow"))
-            intel_report = "Tool execution failed."
-
-        # Step D: 打包
-        dossier = {
-            "id": f"job_{int(time.time())}_{filename[:10]}",
-            "metadata": {
-                "source": filename,
-                "scanned_at": datetime.now().isoformat(),
-                "ocr_used": used_ocr,
-                "parser_version": "v3.3"
-            },
-            "basic_info": parsed_data,
-            "intelligence_report": intel_report,
-            "raw_content": text
+    success_count = 0
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            executor.submit(_scout_worker, fp, parser, tools): fp
+            for fp in target_files
         }
+        pbar = tqdm(as_completed(futures), total=len(futures), desc="🚀 Scouting", unit="jd")
+        for future in pbar:
+            result = future.result()
+            if result:
+                success_count += 1
+                pbar.set_postfix(done=f"{success_count}/{len(target_files)}")
 
-        # Step E: 存檔
-        output_filename = f"{os.path.splitext(filename)[0]}_dossier.json"
-        output_path = os.path.join(DIR_PROCESSED, output_filename)
-        
-        with open(output_path, "w", encoding="utf-8") as f:
-            json.dump(dossier, f, indent=2, ensure_ascii=False)
-            
-        # 成功訊息 (使用 tqdm.write 防止洗版)
-        role = parsed_data.get('role', 'Unknown')
-        company = parsed_data.get('company', 'Unknown')
-        ocr_tag = colored(" [OCR]", "magenta") if used_ocr else ""
-        
-        tqdm.write(colored(f"✅ Saved: {company} - {role}", "green") + ocr_tag)
-        
-        # 恢復進度條標題
-        pbar.set_description("🚀 Scouting")
-
-    cprint(f"\n🎉 Test Run Complete! ({len(target_files)} files processed)", "magenta", attrs=['bold'])
+    cprint(f"\n🎉 Scout Complete! ({success_count}/{len(target_files)} success)", "magenta", attrs=['bold'])
     cprint(f"📁 Check output at: {DIR_PROCESSED}", "white")
 
 if __name__ == "__main__":
