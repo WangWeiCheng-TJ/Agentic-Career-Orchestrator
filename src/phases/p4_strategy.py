@@ -170,10 +170,10 @@ class WeightedClusterStrategy:
 
         cprint("🧠 Generating Dual Embeddings...", "yellow")
         try:
-            resp_m = genai.embed_content(model="models/text-embedding-004", content=must_texts, task_type="clustering")
+            resp_m = genai.embed_content(model="models/gemini-embedding-001", content=must_texts, task_type="clustering")
             vec_m = np.array(resp_m['embedding'])
             
-            resp_n = genai.embed_content(model="models/text-embedding-004", content=nice_texts, task_type="clustering")
+            resp_n = genai.embed_content(model="models/gemini-embedding-001", content=nice_texts, task_type="clustering")
             vec_n = np.array(resp_n['embedding'])
             
             cprint(f"⚗️  Mixing Vectors: {self.ALPHA_MUST*100}% Must + {self.ALPHA_NICE*100}% Nice", "cyan")
