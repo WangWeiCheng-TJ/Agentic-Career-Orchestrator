@@ -1,6 +1,6 @@
 import enum
 from typing import List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 # ==========================================
 # Common Enums
@@ -65,6 +65,12 @@ class GapAnalysisReport(BaseModel):
     Phase 2 Output Root
     """
     gap_analysis: List[GapAnalysisItem] = Field(description="List of gap analysis results")
+    @model_validator(mode='before')
+    @classmethod
+    def wrap_if_list(cls, v):
+        if isinstance(v, list):
+            return {"gap_analysis": v}
+        return v
 
 
 # ==========================================
