@@ -42,7 +42,7 @@ The v2 architecture already introduced a tiered Mixture‑of‑Advisors flow, bu
 The _naive PoC_, mega prompting, is essentially wasting tokens of advanced LLM models while risking attention dilution. Considering a larger scale of usage (particularly when applied to synthetic dataset generation), the system is decoupled into a **tiered inference**, **Multi-Agent** system where a Router Agent executes an OODA loop to ground strategic analysis in real-world technical signals. Eventually, the filtering phase of the **orchestration** system filtered out the JDs that dont fit the hard constraints, while the other JDs are analyzed by an **expert council with dynamic members** to provide feedback and suggestions accordingly.
 
 
-##### ☁️ v3 (Ongoing): Time to Scale Up
+#### ☁️ v3 (Ongoing): Time to Scale Up
 <details>
     <summary>
      Cloud-Ready Large-Scale Parallel Processing (AWS / GCP)
@@ -61,7 +61,7 @@ Instead of only mutating in-place dossier files, v3 formalizes council outputs a
 v3 introduces cloud-ready command templates and deployment patterns so the same image can run on local machines, AWS, or GCP with shared schemas and phase boundaries.
 </details>
 
-##### 🧑‍⚖️ v2 (Current): Summon the Expert Council
+#### 🧑‍⚖️ v2 (Current): Summon the Expert Council
 <details>
     <summary>
     Observe, Orient, Decide, and Act: Decision orchestration with a dynamic MoA
@@ -81,7 +81,7 @@ This upgrade transforms the system from a passive analyzer to an active decision
   Actively rejects non-viable roles (e.g., visa infeasibility, location/compensation mismatch, PhD relevance constraints) before they consume human attention or additional compute.
 </details>
 
-##### 🧩 v1 (Legacy): The Naive Way
+#### 🧩 v1 (Legacy): The Naive Way
 <details>
     <summary>
  A Rigid "Smart Filter"

@@ -103,6 +103,8 @@ def identify_doc_type(filename, text):
         return "RESUME"
     if "cover" in fname and "letter" in fname:
         return "COVER_LETTER"
+    if "cl" in fname:
+        return "COVER_LETTER"
     if "jd" in fname or "job" in fname or "description" in fname:
         return "JD"
         
@@ -128,6 +130,7 @@ def extract_text_smart(filepath):
 def process_folder(base_path, status_label, collection):
     search_path = os.path.join(base_path, "**", "*.pdf")
     files = glob.glob(search_path, recursive=True)
+    cprint(f"Found {len(files)} files in {base_path}", "cyan")
     
     if not files: return 0
 
