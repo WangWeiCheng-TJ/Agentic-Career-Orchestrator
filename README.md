@@ -297,6 +297,7 @@ docker-compose up -d --build
             ```bash            
             # Phase 1: Tool-augmented JD parsing
             docker-compose run --rm orchestrator python src/phases/p1_scout.py
+            --test-limit (number of testing JDs); --force-update (force update dossier); --max-workers (parallel workers)
 
             # Phase 2: Triage & Gatekeeping
             docker-compose run --rm orchestrator python src/phases/p2_triage.py
