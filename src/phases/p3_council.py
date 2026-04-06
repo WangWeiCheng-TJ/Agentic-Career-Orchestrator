@@ -5,6 +5,8 @@ import sys
 from termcolor import colored, cprint
 from tqdm import tqdm
 from dotenv import load_dotenv
+import argparse
+
 
 # parallel processing
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -292,9 +294,19 @@ def _step2_gap_analysis(dossier, gateway, factory, db_context):
 # ==========================================
 # 🚀 Main Controller (Orchestrator)
 # ==========================================
-def run_phase3_dynamic_execution():
+def run_phase3_dynamic_execution(ap):
     cprint("\n🏛️  [Phase 3] EXPERT COUNCIL: Dynamic Diagnosis Pipeline", "magenta", attrs=['bold', 'reverse'])
     
+    # === 加這段 argparse ===
+    
+    ap.add_argument("--test-limit", type=int, default=None, help="Only process first N dossiers")
+    ap.add_argument("--force-refresh", action="store_true", default=False)
+    args = ap.parse_args()
+    
+    # 蓋掉全域的 FORCE_REFRESH
+    global FORCE_REFRESH
+    FORCE_REFRESH = args.force_refresh
+
     # 1. 初始化共通工具 (只做一次)
     try:
         # Gateway 負責模型路由與重試
@@ -332,6 +344,10 @@ def run_phase3_dynamic_execution():
     
     # 3. 遍歷檔案
     files = glob.glob(os.path.join(DIR_PENDING, "*.json"))
+    if args.test_limit:
+        files = files[:args.test_limit]
+    
+    cprint(f"📂 Found {len(files)} dossiers to process...", "white")
     pbar = tqdm(files, desc="Processing Dossiers", unit="job")
     
     for filepath in pbar:
@@ -369,4 +385,5 @@ def run_phase3_dynamic_execution():
     cprint("\n🎉 Diagnosis Complete.", "green")
 
 if __name__ == "__main__":
-    run_phase3_dynamic_execution()
+    ap = argparse.ArgumentParser()
+    run_phase3_dynamic_execution(ap)
