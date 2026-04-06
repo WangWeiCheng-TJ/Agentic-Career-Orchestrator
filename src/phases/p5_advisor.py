@@ -4,6 +4,11 @@ import glob
 from termcolor import colored, cprint
 from dotenv import load_dotenv
 import re
+import sys
+
+# === 路徑設定 ===
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))) 
+sys.path.append(os.path.abspath(".")) 
 
 # === IMPORTS ===
 from src.tools.model_gateway import SmartModelGateway
