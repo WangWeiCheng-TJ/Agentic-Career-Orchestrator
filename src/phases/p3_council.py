@@ -8,6 +8,19 @@ from dotenv import load_dotenv
 
 # parallel processing
 from concurrent.futures import ThreadPoolExecutor, as_completed
+# rate limiter for parallel processing ( parallel could easily hit the rate limit)
+import threading
+import time
+_call_lock = threading.Lock()
+_last_call_time = [0.0]
+MIN_INTERVAL = 2.5  # 秒
+def _rate_limited_generate(gateway, prompt, validator, schema):
+    with _call_lock:
+        elapsed = time.time() - _last_call_time[0]
+        if elapsed < MIN_INTERVAL:
+            time.sleep(MIN_INTERVAL - elapsed)
+        _last_call_time[0] = time.time()
+    return gateway.generate(prompt, validator, schema=schema)
 
 # === 路徑設定 ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))) 
@@ -121,8 +134,9 @@ def _skill_worker(raw_jd, eid, factory, gateway, context_data):
 
         # Gateway Call
         prompt = factory.create_expert_prompt(eid, "SKILL", context_data)
-        result = gateway.generate(prompt, validate_council_skill, schema=SkillExtractionReport)
-        
+        # result = gateway.generate(prompt, validate_council_skill, schema=SkillExtractionReport)
+        result = _rate_limited_generate(gateway, prompt, validate_council_skill, SkillExtractionReport)
+
         # Save Logic
         council_memory.save(raw_jd, eid, "SKILL", result)
         
@@ -238,11 +252,12 @@ def _gap_worker(raw_jd, eid, factory, gateway, skill_map, dossier, db_context):
         
         # [MODIFIED] 傳入 Pydantic Schema
         # 告訴 Gateway: "我要這個格式，其他的都不要"
-        result = gateway.generate(
-            prompt, 
-            validate_gap_effort, 
-            schema=GapAnalysisReport
-        )
+        # result = gateway.generate(
+        #     prompt, 
+        #     validate_gap_effort, 
+        #     schema=GapAnalysisReport
+        # )
+        result = _rate_limited_generate(gateway, prompt, validate_gap_effort, GapAnalysisReport)
 
         # --- D. Save & Store ---
         council_memory.save(raw_jd, eid, "GAP_EFFORT", result)
@@ -333,7 +348,6 @@ def run_phase3_dynamic_execution():
     pbar = tqdm(files, desc="Processing Dossiers", unit="job")
     
     for filepath in pbar:
-        input()
         # Load Dossier
         with open(filepath, 'r', encoding='utf-8') as f:
             dossier = json.load(f)
