@@ -222,8 +222,8 @@ class SmartModelGateway:
         
         # 自動分流邏輯
         if use_gemma_req and token_count > (tpm_limit - 1000):
-            print("171", tpm_limit, use_gemma_req, token_count)
-            input()
+            # print("171", tpm_limit, use_gemma_req, token_count)
+            # input()
             actual_use_gemma = False
             tqdm.write(colored(f"  ⚠️ TPM Sentinel: Prompt size ({token_count}) approaching {tpm_limit//1000}k limit. Auto-switching to Flash.", "yellow"))
         elif token_count > 5000:
