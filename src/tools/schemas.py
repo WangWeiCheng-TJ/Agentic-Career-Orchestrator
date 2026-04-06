@@ -12,6 +12,11 @@ class EffortLevel(str, enum.Enum):
     HIGH = "HIGH"
     BLOCKER = "BLOCKER"
 
+class MatchStatus(str, enum.Enum):
+    MATCH = "MATCH"
+    PARTIAL = "PARTIAL"
+    NO_MATCH = "NO_MATCH"
+
 class EvidenceStatus(str, enum.Enum):
     FOUND_STRONG = "FOUND_STRONG"
     FOUND_WEAK = "FOUND_WEAK"
@@ -42,13 +47,18 @@ class SkillExtractionReport(BaseModel):
 # ==========================================
 
 class Evidence(BaseModel):
-    status: EvidenceStatus
-    evidence_snippet: str = Field(description="Direct quote or summary of the evidence found in Cheat Sheet/Personal DB. If NOT_FOUND, explain why.")
+    status: MatchStatus
+    evidence_snippet: str = Field(
+        description="Direct quote or summary of the evidence found in Cheat Sheet/Personal DB. If NO_MATCH, explain why."
+    )
 
 class ResumeReusability(BaseModel):
-    status: str = Field(description="EXACT_MATCH, CONCEPT_MATCH, or NO_MATCH")
-    closest_existing_bullet: Optional[str] = Field(None, description="The matching bullet text from current resume, or null if no match.")
-
+    status: MatchStatus
+    closest_existing_bullet: Optional[str] = Field(
+        None,
+        description="The matching bullet text from current resume, or null if no match."
+    )
+    
 class EffortAssessment(BaseModel):
     level: EffortLevel
     strategy: str = Field(description="Strategy to fix this gap (e.g., 'Rewrite Bullet', 'Add Project', 'Study Concept').")
@@ -70,6 +80,9 @@ class GapAnalysisReport(BaseModel):
     def wrap_if_list(cls, v):
         if isinstance(v, list):
             return {"gap_analysis": v}
+        # ← 加這行
+        if isinstance(v, dict) and "gap_analysis" not in v and "topic" in v:
+            return {"gap_analysis": [v]}
         return v
 
 

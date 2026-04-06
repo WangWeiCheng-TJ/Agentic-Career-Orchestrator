@@ -39,6 +39,8 @@ QUOTE: [Direct quote from the JD]
 ### 🎯 Task
 Compare the **Target Skills** against the **Personal DB**. 
 Identify if evidence exists and estimate the learning effort.
+EVIDENCE_STATUS: whether your personal DB contains supporting evidence for this skill
+REUSABILITY: whether an existing resume bullet can be directly reused for this skill
 
 ### 📥 Inputs
 1. **Target Skills**: {{ previous_phase_memory | tojson }}
@@ -50,11 +52,11 @@ Output each analysis block as follows:
 
 @@@
 TOPIC: [Skill Name]
-EFFORT: [LOW / MEDIUM / HIGH]
+EFFORT: [LOW / MEDIUM / HIGH / BLOCKER]
 STRATEGY: [Short tactical advice to bridge the gap]
-EVIDENCE_STATUS: [FOUND_STRONG / FOUND_WEAK / NOT_FOUND]
+EVIDENCE_STATUS: [MATCH / PARTIAL / NO_MATCH]
 EVIDENCE_SNIPPET: [Specific project/fact from DB or "None"]
-REUSABILITY: [EXACT_MATCH / PARTIAL / NO_MATCH]
+REUSABILITY: [MATCH / PARTIAL / NO_MATCH]
 @@@
 
 {% elif mode == "ADVISOR" %}
