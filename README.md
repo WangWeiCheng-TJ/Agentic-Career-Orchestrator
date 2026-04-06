@@ -298,10 +298,11 @@ docker-compose up -d --build
             # Phase 1: Tool-augmented JD parsing
             docker-compose run --rm orchestrator python src/phases/p1_scout.py
             --test-limit (number of testing JDs); --force-update (force update dossier); --max-workers (parallel workers)
-
+            
             # Phase 2: Triage & Gatekeeping
             docker-compose run --rm orchestrator python src/phases/p2_triage.py
-
+            same options as p1
+            
             # Phase 3: MoA Council (dynamic advisors)
             docker-compose run --rm orchestrator python src/phases/p3_council.py
 

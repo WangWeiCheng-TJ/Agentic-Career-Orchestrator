@@ -46,7 +46,7 @@ if not os.path.exists(DIR_INCOMING):
     cprint(f"⚠️ Warning: {DIR_INCOMING} does not exist inside container.", "yellow")
 
 # [測試設定] 設定為整數 (e.g., 3) 只跑前 3 筆。設定為 None 則跑全部。
-TEST_LIMIT = None 
+TEST_LIMIT = None
 
 
 def _get_output_path(filepath: str, output_dir: str) -> str:

@@ -1,156 +1,207 @@
 import os
 import glob
 import json
-import shutil
 import sys
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from dotenv import load_dotenv
 from termcolor import colored, cprint
 import google.generativeai as genai
 from tqdm import tqdm
 
-# === 路徑設定與引用 ===
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
 from src.agents.triage import TriageAgent
-# from src.agents.profile_generator import ProfileGeneratorAgent 
 
 # === CONFIG ===
 load_dotenv()
 API_KEY = os.getenv("GOOGLE_API_KEY")
 MODEL_NAME = os.getenv("MODEL_NAME", "gemini-1.5-flash")
-CHROMA_PATH = os.getenv("CHROMA_DB_PATH", "/app/data/chroma_db")
 
 DIR_DOSSIERS = "/app/data/processed/dossiers"
-DIR_PENDING = "/app/data/processed/pending_council"
-DIR_TRASH = "/app/data/processed/trash"
+DIR_PENDING  = "/app/data/processed/pending_council"
+DIR_TRASH    = "/app/data/processed/trash"
 PATH_PROFILE = "/app/data/personal/profile.md"
 
-os.makedirs(DIR_PENDING, exist_ok=True)
-os.makedirs(DIR_TRASH, exist_ok=True)
+MAX_WORKERS  = 3
+MAX_WORKERS = os.getenv("MAX_WORKERS", 5)
+FORCE_UPDATE = os.getenv("FORCE_UPDATE", "false").lower() == "true"
+TEST_LIMIT = None
 
-aggressive_instruction = (
-        f"\n\n[SYSTEM ERROR]: Your previous JSON output was REJECTED."
-        f"\nReason: The experts gave lazy one-word explanations."
-        f"\nCorrection: You MUST rewrite the 'note' field for ALL experts."
-        f"\nRule: The 'note' must be a COMPLETE SENTENCE (at least 15 words) explaining the score."
-        f"\nExample: Instead of 'Helpful', write 'Candidate's C++ experience aligns well with the latency requirements.'"
+os.makedirs(DIR_PENDING, exist_ok=True)
+os.makedirs(DIR_TRASH,   exist_ok=True)
+
+AGGRESSIVE_INSTRUCTION = (
+    "\n\n[SYSTEM ERROR]: Your previous JSON output was REJECTED."
+    "\nReason: The experts gave lazy one-word explanations."
+    "\nCorrection: You MUST rewrite the 'note' field for ALL experts."
+    "\nRule: The 'note' must be a COMPLETE SENTENCE (at least 15 words) explaining the score."
+    "\nExample: Instead of 'Helpful', write 'Candidate\\'s C++ experience aligns well with the latency requirements.'"
+)
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Phase 2 Triage Agent")
+    parser.add_argument("--input-dir",    default=DIR_DOSSIERS, help="Directory containing dossier JSON files")
+    parser.add_argument("--pending-dir",  default=DIR_PENDING,  help="Directory for PASS dossiers")
+    parser.add_argument("--trash-dir",    default=DIR_TRASH,    help="Directory for FAIL dossiers")
+    parser.add_argument("--test-limit", type=int, default=TEST_LIMIT, help="Only process first N dossiers")
+    parser.add_argument("--max-workers",  type=int, default=MAX_WORKERS, help="Number of parallel workers")
+    parser.add_argument("--force-update", action="store_true", default=FORCE_UPDATE, help="Re-run even if already processed")
+    return parser.parse_args()
+
+
+def load_profile() -> str:
+    if not os.path.exists(PATH_PROFILE):
+        cprint(f"❌ Profile not found at {PATH_PROFILE}. Please create it before running Phase 2.", "red")
+        sys.exit(1)
+    with open(PATH_PROFILE, 'r', encoding='utf-8') as f:
+        return f.read()
+
+
+def already_processed(filename: str, pending_dir: str, trash_dir: str) -> bool:
+    return (
+        os.path.exists(os.path.join(pending_dir, filename)) or
+        os.path.exists(os.path.join(trash_dir,   filename))
     )
 
-def get_or_create_profile(model):
-    """取得使用者設定檔，並支援即時編輯後重載"""
-    if not os.path.exists(PATH_PROFILE):
-        cprint(f"🔍 Profile not found. Mining Personal Database...", "cyan")
-        try:
-            generator = ProfileGeneratorAgent(model, CHROMA_PATH)
-            content = generator.generate_profile()
-            with open(PATH_PROFILE, 'w', encoding='utf-8') as f:
-                f.write(content)
-            cprint(f"🎉 Auto-generated profile!", "green")
-        except Exception as e:
-            cprint(f"❌ Failed to generate profile: {e}", "red")
-            sys.exit(1)
 
-    while True:
-        with open(PATH_PROFILE, 'r', encoding='utf-8') as f:
-            content = f.read()
-        cprint("\n📋 === REVIEW YOUR TRIAGE STRATEGY === ", "cyan", attrs=['bold'])
-        print(colored("-" * 40, "dark_grey"))
-        print(colored(content, "white"))
-        print(colored("-" * 40, "dark_grey"))
-        cprint("💡 You can edit 'data/personal/profile.md' manually NOW.", "dark_grey")
-        
-        choice = (input(colored("\n❓ Proceed? [Y] / e (Edit & Reload) / q (Quit): ", "yellow")).strip().lower() or 'y')
-        if choice == 'y':
-            return content
-        elif choice in ['e', 'edit']:
-            cprint(f"⏸️  Program PAUSED. Edit: {PATH_PROFILE}", "magenta", attrs=['reverse'])
-            input(colored("⌨️  Press [ENTER] when saved...", "magenta"))
-            continue
-        elif choice == 'q':
-            sys.exit(0)
+def triage_worker(filepath: str, user_profile_text: str, pending_dir: str, trash_dir: str, force_update: bool) -> dict:
+    filename = os.path.basename(filepath)
 
-def run_triage():
-    cprint("\n🚑 [Phase 2] FULL RECONNAISSANCE TRIAGE", "cyan", attrs=['bold', 'reverse'])
-    
-    if not API_KEY:
-        cprint("❌ API Key missing.", "red")
-        return
+    if already_processed(filename, pending_dir, trash_dir) and not force_update:
+        return {"status": "skipped", "filename": filename}
 
-    genai.configure(api_key=API_KEY)
-    model = genai.GenerativeModel(MODEL_NAME)
-    user_profile_text = get_or_create_profile(model)
-    agent = TriageAgent(model)
-    
-    files = glob.glob(os.path.join(DIR_DOSSIERS, "*_dossier.json"))
-    if not files:
-        cprint(f"😴 No dossiers found in {DIR_DOSSIERS}.", "yellow")
-        return
-
-    cprint(f"📂 Evaluating {len(files)} dossiers...", "white")
-    pbar = tqdm(files, desc="🩺 Triaging", unit="job")
-    stats = {"pass": 0, "fail": 0}
-
-    for filepath in pbar:
-        filename = os.path.basename(filepath)
-        pbar.set_postfix(file=filename[:10])
-
+    try:
         with open(filepath, 'r', encoding='utf-8') as f:
             dossier = json.load(f)
-        
-        role = dossier.get('basic_info', {}).get('role', 'Unknown')
+
+        role    = dossier.get('basic_info', {}).get('role',    'Unknown')
         company = dossier.get('basic_info', {}).get('company', 'Unknown')
 
-        try:
-            # === 核心：專家會診轉診報告 ===
-            result = agent.evaluate(dossier, user_profile_text)
-            decision = result.get('decision', 'PASS').upper()
-            reason = result.get('reason', 'No reason provided')
-            referral = result.get('referral_analysis', {})
-            
-            dossier['triage_result'] = result # 保存完整報告
+        # worker 內自己初始化，避免 shared state 問題
+        model = genai.GenerativeModel(MODEL_NAME)
+        agent = TriageAgent(model)
 
-            if decision == "PASS":
-                # 先檢查內容有沒有問題要重跑
-                if len(referral.get("E1", {}).get('note', 'N/A')) < 20:
-                    referral = agent.evaluate(dossier, user_profile_text, aggressive_instruction).get('referral_analysis', {})
-                    print("Regenerate Referral Report")
+        result   = agent.evaluate(dossier, user_profile_text)
+        decision = result.get('decision', 'PASS').upper()
+        reason   = result.get('reason', 'No reason provided')
+        referral = result.get('referral_analysis', {})
+
+        # 補強短 note
+        if decision == "PASS" and len(referral.get("E1", {}).get('note', '')) < 20:
+            rerun    = agent.evaluate(dossier, user_profile_text, AGGRESSIVE_INSTRUCTION)
+            referral = rerun.get('referral_analysis', {})
+            result   = rerun
+            tqdm.write(colored(f"  🔄 Regenerated referral for: {filename}", "magenta"))
+
+        dossier['triage_result'] = result
+
+        target_dir = pending_dir if decision == "PASS" else trash_dir
+        target_path = os.path.join(target_dir, filename)
+        with open(target_path, 'w', encoding='utf-8') as f:
+            json.dump(dossier, f, indent=2, ensure_ascii=False)
+
+        return {
+            "status":   "pass" if decision == "PASS" else "fail",
+            "filename": filename,
+            "company":  company,
+            "role":     role,
+            "reason":   reason,
+            "referral": referral,
+        }
+
+    except Exception as e:
+        return {"status": "error", "filename": filename, "error": str(e)}
 
 
-                # 1. 視覺回饋：印出通過訊息
-                tqdm.write(colored(f"\n✅ PASS: {company} - {role}", "green", attrs=['bold']))
-                
-                # 2. 印出全量專家建議 (不篩選，顯示 E1-E8)
+def run_triage(args):
+    force_msg = " [FORCE_UPDATE]" if args.force_update else ""
+    cprint(f"\n🚑 [Phase 2] FULL RECONNAISSANCE TRIAGE{force_msg}", "cyan", attrs=['bold', 'reverse'])
+
+    if not API_KEY:
+        cprint("❌ API Key missing.", "red")
+        sys.exit(1)
+
+    genai.configure(api_key=API_KEY)
+
+    user_profile_text = load_profile()
+    cprint(f"✅ Profile loaded from {PATH_PROFILE}", "green")
+
+    files = sorted(glob.glob(os.path.join(args.input_dir, "*_dossier.json")))
+    if not files:
+        cprint(f"😴 No dossiers found in {args.input_dir}.", "yellow")
+        return
+
+    if args.force_update:
+        candidate_files = files
+    else:
+        candidate_files = [
+            fp for fp in files
+            if not already_processed(os.path.basename(fp), args.pending_dir, args.trash_dir)
+        ]
+
+    target_files = candidate_files[:args.test_limit] if args.test_limit else candidate_files
+
+    cprint(f"📂 Found {len(files)} dossiers. Pending {len(candidate_files)}. Processing {len(target_files)}...", "white")
+    print("-" * 40)
+
+    if not target_files:
+        cprint("✅ Nothing to do. All dossiers already triaged.", "green")
+        return
+
+    stats = {"pass": 0, "fail": 0, "skipped": 0, "error": 0}
+
+    with ThreadPoolExecutor(max_workers=args.max_workers) as executor:
+        futures = {
+            executor.submit(
+                triage_worker,
+                fp,
+                user_profile_text,
+                args.pending_dir,
+                args.trash_dir,
+                args.force_update
+            ): fp
+            for fp in target_files
+        }
+
+        pbar = tqdm(as_completed(futures), total=len(futures), desc="🩺 Triaging", unit="job")
+        for future in pbar:
+            result = future.result()
+            status = result["status"]
+            stats[status] = stats.get(status, 0) + 1
+            pbar.set_postfix(**{k: v for k, v in stats.items() if v > 0})
+
+            if status == "skipped":
+                tqdm.write(colored(f"⏭️  SKIP: {result['filename']}", "blue"))
+
+            elif status == "error":
+                tqdm.write(colored(f"⚠️  ERROR [{result['filename']}]: {result['error']}", "red"))
+
+            elif status == "pass":
+                tqdm.write(colored(f"\n✅ PASS: {result['company']} - {result['role']}", "green", attrs=['bold']))
+                referral = result.get("referral", {})
                 for i in range(1, 9):
-                    eid = f"E{i}"
-                    data = referral.get(eid, {})
+                    eid   = f"E{i}"
+                    data  = referral.get(eid, {})
                     score = data.get('relevance', 0)
-                    note = data.get('note', 'N/A')
-                    
-                    # 根據權重上色
+                    note  = data.get('note', 'N/A')
                     color = "cyan" if score >= 7 else "dark_grey"
-                    icon = "🔥" if score >= 7 else "▫️"
-                    tqdm.write(colored(f"   {icon} [{eid}] Rel: {score}/10 | {note}", color))
-                
-                target_dir = DIR_PENDING
-                stats["pass"] += 1
-            else:
-                tqdm.write(colored(f"🗑️  FAIL: {company} - {role}", "red"))
-                tqdm.write(colored(f"   Reason: {reason}", "dark_grey"))
-                target_dir = DIR_TRASH
-                stats["fail"] += 1
+                    icon  = "🔥" if score >= 7 else "▫️"
+                    tqdm.write(colored(f"  {icon} [{eid}] Rel: {score}/10 | {note}", color))
 
-            # === 存檔與移動 ===
-            target_path = os.path.join(target_dir, filename)
-            with open(target_path, 'w', encoding='utf-8') as f:
-                json.dump(dossier, f, indent=2, ensure_ascii=False)
+            elif status == "fail":
+                tqdm.write(colored(f"🗑️  FAIL: {result['company']} - {result['role']}", "red"))
+                tqdm.write(colored(f"   Reason: {result['reason']}", "dark_grey"))
 
-        except Exception as e:
-            tqdm.write(colored(f"⚠️ Agent Error on {filename}: {e}", "red"))
-            continue
-
-    # 總結
     cprint("\n🎉 Phase 2 Complete.", "magenta", attrs=['bold'])
-    cprint(f"   🗑️  Trashed: {stats['fail']}", "red")
-    cprint(f"   ✅ Pending Council: {stats['pass']}", "green")
+    cprint(f"  ✅ Pending Council : {stats.get('pass',    0)}", "green")
+    cprint(f"  🗑️  Trashed         : {stats.get('fail',    0)}", "red")
+    cprint(f"  ⏭️  Skipped         : {stats.get('skipped', 0)}", "blue")
+    cprint(f"  ⚠️  Errors          : {stats.get('error',   0)}", "yellow")
+
 
 if __name__ == "__main__":
-    run_triage()
+    args = parse_args()
+    cprint(args.test_limit)
+    run_triage(args)
