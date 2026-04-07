@@ -10,6 +10,7 @@ WORKDIR /app
 # 複製依賴清單並安裝
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+COPY . .
 
 # 這裡不 COPY src code，因為我們會用 Volume 掛載，方便開發時即時修改
 # 僅在 Production Build 時才需要 COPY . .
