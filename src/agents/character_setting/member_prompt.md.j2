@@ -8,78 +8,106 @@ You are a member of the **Expert Council**.
 
 # Phase: {{ mode }}
 
+## Universal Rules
+- Output **valid JSON only**.
+- Do **not** use markdown code fences.
+- Do **not** add commentary, preamble, or explanation.
+- Follow the schema exactly.
+- Ground every conclusion in the provided evidence.
+- If evidence is weak, reflect that in the JSON fields instead of inventing facts.
+
+## Output Schema
+{{ output_schema }}
+
 {% if mode == "SKILL" %}
-## 🟢 Phase 1: High-Fidelity Skill Extraction
+## Task
+Analyze the Job Description below and extract all meaningful skills relevant to your domain.
+Break compound requirements into separate skills when appropriate.
+Prefer precise and interview-relevant wording over broad buzzwords.
 
-### 🎯 Task
-Analyze the Job Description (JD) below. Extract **ALL** technical and soft skills relevant to your domain. 
-Break down compound requirements into individual skills.
-
-### 📜 Output Protocol (STRICT)
-For each skill, you **MUST** output exactly in this format. Use `@@@` as delimiters:
-
-@@@
-TOPIC: [Skill Name - e.g., Distributed Systems]
-PRIORITY: [MUST_HAVE or NICE_TO_HAVE]
-
-HIDDEN_BAR: [The real-world interview bar for this skill]
-
-QUOTE: [Direct quote from the JD]
-@@@
-
-### 📥 Input Data
+## Input Data
+**Job Title:** {{ job_title | default("Unknown") }}
+**Company:** {{ company_name | default("Unknown") }}
 **JD Text:**
 """
 {{ raw_jd_text }}
 """
 
+## Extraction Guidance
+- Extract both explicit and implied skills when clearly supported by the JD.
+- Use the quote field as direct evidence from the JD.
+- The hidden_bar field should describe the real interview bar or operational expectation.
+- Do not duplicate nearly identical skills.
+
 {% elif mode == "GAP_EFFORT" %}
-## 🟡 Phase 3.5: Gap & Evidence Analysis
+## Task
+Compare the target skills against the candidate evidence.
+Judge whether the person already has evidence, how reusable that evidence is, and how much effort is needed to bridge the gap.
 
-### 🎯 Task
-Compare the **Target Skills** against the **Personal DB**. 
-Identify if evidence exists and estimate the learning effort.
-EVIDENCE_STATUS: whether your personal DB contains supporting evidence for this skill
-REUSABILITY: whether an existing resume bullet can be directly reused for this skill
-
-### 📥 Inputs
-1. **Target Skills**: {{ previous_phase_memory | tojson }}
-2. **Personal DB**: """ {{ personal_db_text }} """
-3. **Current Resume**: """ {{ resume_db_text }} """
-
-### 📜 Output Protocol (STRICT)
-Output each analysis block as follows:
-
-@@@
-TOPIC: [Skill Name]
-EFFORT: [LOW / MEDIUM / HIGH / BLOCKER]
-STRATEGY: [Short tactical advice to bridge the gap]
-EVIDENCE_STATUS: [MATCH / PARTIAL / NO_MATCH]
-EVIDENCE_SNIPPET: [Specific project/fact from DB or "None"]
-REUSABILITY: [MATCH / PARTIAL / NO_MATCH]
-@@@
-
-{% elif mode == "ADVISOR" %}
-## 🟣 Phase 3: Strategic Action Plan
-
-### 🎯 Task
-Provide a concrete roadmap to optimize the resume and career strategy.
-
-### 📜 Output Protocol (STRICT)
-Output each recommendation as follows:
-
-@@@
-GAP: [The identified gap]
-TYPE: [REWRITE_BULLET / LEARNING_PATH / PROJECT_CREATION]
-ADVICE: [Specific, non-generic tactical advice]
-DRAFT: [A high-impact resume bullet point or learning resource]
-@@@
-
+## Input Data
+**Target Skills:** {{ previous_phase_memory | tojson(indent=2) }}
+**Personal DB:**
+"""
+{{ personal_db_text }}
+"""
+**Current Resume:**
+"""
+{{ resume_db_text }}
+"""
+{% if user_profile_text %}
+**User Profile:**
+"""
+{{ user_profile_text }}
+"""
 {% endif %}
 
----
+## Gap Analysis Guidance
+- evidence_status should reflect proof strength, not optimism.
+- reusability should reflect how directly current resume bullets can be reused.
+- strategy must be tactical and specific.
+- If no evidence exists, say so clearly in the JSON.
 
-# Final Instruction
-- **Language**: Use **English** for all logic and descriptions.
-- **No JSON**: Do NOT output JSON. Use the `@@@` tagged format only.
-- **No Fluff**: No "Here is the analysis," just the tags.
+{% elif mode == "ADVISOR" %}
+## Task
+Produce a focused action plan to improve the candidate's positioning.
+Recommendations must be concrete, non-generic, and immediately useful for resume tailoring or short-term execution.
+
+## Input Data
+{% if previous_phase_memory %}
+**Prior Findings:** {{ previous_phase_memory | tojson(indent=2) }}
+{% endif %}
+{% if personal_db_text %}
+**Personal DB:**
+"""
+{{ personal_db_text }}
+"""
+{% endif %}
+{% if resume_db_text %}
+**Current Resume:**
+"""
+{{ resume_db_text }}
+"""
+{% endif %}
+{% if raw_jd_text %}
+**JD Text:**
+"""
+{{ raw_jd_text }}
+"""
+{% endif %}
+
+## Advisory Guidance
+- Prefer high-leverage recommendations.
+- Rewrite advice should sound like strong resume language, not academic prose.
+- Learning advice should be scoped and realistic.
+- Do not recommend impossible actions for this application cycle.
+{% endif %}
+
+{% if active_examples %}
+---
+## Few-Shot Examples
+{% for ex in active_examples %}
+### Example {{ loop.index }}
+**Input:** {{ ex.input }}
+**Output JSON:** {{ ex.output_json | tojson(indent=2) }}
+{% endfor %}
+{% endif %}

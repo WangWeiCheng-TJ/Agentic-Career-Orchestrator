@@ -301,7 +301,7 @@ def run_phase3_dynamic_execution(ap):
     # === 加這段 argparse ===
     ap.add_argument("--use-mock-profile", default=USE_MOCK_DB, help="Directory containing dossier JSON files")
     ap.add_argument("--test-limit", type=int, default=None, help="Only process first N dossiers")
-    ap.add_argument("--force-refresh", action="store_true", default=False)
+    ap.add_argument("--force-refresh", action="store_true")
     args = ap.parse_args()
     
     # 蓋掉全域的 FORCE_REFRESH
