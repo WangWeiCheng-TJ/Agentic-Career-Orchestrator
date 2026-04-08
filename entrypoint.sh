@@ -1,25 +1,28 @@
 #!/bin/bash
-# entrypoint.sh - S3 sync wrapper
-# 啟動時從 S3 pull data，結束時 push 回去
-
-# set -e  # 任何指令失敗就停止
 set -euo pipefail
 
 S3_BUCKET=${S3_BUCKET:-"agentic-career-orchestrator-wcw-dev"}
 LOCAL_DATA="/app/data"
+RUNTIME_ENV=${ACO_RUNTIME_ENV:-"local"}
 
-echo "📥 Syncing data from S3..."
-# aws s3 sync s3://${S3_BUCKET}/data ${LOCAL_DATA} --quiet
-aws s3 sync s3://${S3_BUCKET}/data ${LOCAL_DATA}
-echo "✅ S3 sync done."
+if [ "$RUNTIME_ENV" = "aws" ]; then
+  echo "📥 Syncing data from S3..."
+  aws s3 sync s3://${S3_BUCKET}/data ${LOCAL_DATA}
+  echo "✅ S3 sync done."
+else
+  echo "🏠 Local mode detected. Skip S3 sync."
+fi
 
-# 執行傳進來的指令（例如 python src/phases/p3_council.py --test-limit 2）
 echo "🚀 Running: $@"
 "$@"
 EXIT_CODE=$?
 
-echo "📤 Syncing results back to S3..."
-aws s3 sync ${LOCAL_DATA} s3://${S3_BUCKET}/data --quiet
-echo "✅ Upload done."
+if [ "$RUNTIME_ENV" = "aws" ]; then
+  echo "📤 Syncing results back to S3..."
+  aws s3 sync ${LOCAL_DATA} s3://${S3_BUCKET}/data --quiet
+  echo "✅ Upload done."
+else
+  echo "🏠 Local mode detected. Skip S3 upload."
+fi
 
 exit $EXIT_CODE

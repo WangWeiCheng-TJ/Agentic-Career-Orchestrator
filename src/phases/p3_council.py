@@ -30,7 +30,7 @@ except ImportError as e:
 
 
 # === MOCK MODE (跳過 ChromaDB，測試 pipeline 用) ===
-USE_MOCK_DB = os.getenv("USE_MOCK_TOOLS", TRUE)
+USE_MOCK_DB = os.getenv("USE_MOCK_TOOLS", "true").lower() == "true"
 
 MOCK_PERSONAL_DB = """
 === SOURCE: research_experience.md ===
