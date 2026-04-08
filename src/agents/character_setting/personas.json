@@ -21,11 +21,20 @@
           "input": "Target Skill: Autonomy | Personal DB: Led a solo research project.",
           "output_json": {
             "topic": "Autonomy",
-            "effort": "LOW",
-            "strategy": "Change 'Managed' to 'Spearheaded' to emphasize independent ownership.",
-            "evidence_status": "FOUND_WEAK",
-            "evidence_snippet": "Led a solo research project.",
-            "reusability": "CONCEPT_MATCH"
+            "evidence_in_personal_db": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Led a solo research project."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Current wording suggests ownership, but the independence signal is not explicit enough."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Change 'Managed' to 'Spearheaded' to emphasize independent ownership.",
+              "estimated_action": "Rewrite one resume bullet to show self-directed execution without supervision."
+            }
           }
         }
       ],
@@ -73,22 +82,40 @@
           "input": "Target Skill: Rust Memory Safety | Personal DB: Extensive C++ RAII experience.",
           "output_json": {
             "topic": "Rust Memory Safety",
-            "effort": "LOW",
-            "strategy": "Frame deep C++ RAII mastery as the conceptual foundation for Rust ownership.",
-            "evidence_status": "FOUND_STRONG",
-            "evidence_snippet": "Extensive C++ RAII experience in PhD thesis; Small Rust toy project on GitHub.",
-            "reusability": "CONCEPT_MATCH"
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Extensive C++ RAII experience in PhD thesis; Small Rust toy project on GitHub."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Current resume shows strong C++ systems evidence, but does not explicitly connect it to Rust ownership."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Frame deep C++ RAII mastery as the conceptual foundation for Rust ownership.",
+              "estimated_action": "Rewrite one systems bullet to connect C++ memory safety concepts to Rust ownership and mention the toy Rust project."
+            }
           }
         },
         {
           "input": "Target Skill: Kubernetes | Personal DB: No direct experience.",
           "output_json": {
             "topic": "Kubernetes Production Exp",
-            "effort": "HIGH",
-            "strategy": "Do a crash course or focus on 'Containerization' (Docker) which you have.",
-            "evidence_status": "NOT_FOUND",
-            "evidence_snippet": "No matching experience found.",
-            "reusability": "NO_MATCH"
+            "evidence_in_personal_db": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "No direct evidence found in personal DB."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "No reusable resume bullet found for Kubernetes production work."
+            },
+            "effort_assessment": {
+              "level": "HIGH",
+              "score": 8,
+              "strategy": "Position Docker and deployment fundamentals as adjacent groundwork, but acknowledge that production Kubernetes remains a real gap.",
+              "estimated_action": "Add one small container orchestration project and rewrite resume bullets to emphasize deployment readiness."
+            }
           }
         }
       ],
@@ -145,11 +172,20 @@
           "input": "Target Skill: Relocation Readiness | Personal DB: Based in Belgium (Blue Card).",
           "output_json": {
             "topic": "Relocation Readiness",
-            "effort": "LOW",
-            "strategy": "Explicitly state legal status to remove hiring friction.",
-            "evidence_status": "FOUND_STRONG",
-            "evidence_snippet": "Currently based in Belgium (EU Blue Card holder).",
-            "reusability": "NO_MATCH"
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Currently based in Belgium (EU Blue Card holder)."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "Current resume does not clearly surface relocation readiness or work authorization."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Explicitly state legal status to remove hiring friction.",
+              "estimated_action": "Add one concise line in the header or summary clarifying current location and work authorization."
+            }
           }
         }
       ],
@@ -206,11 +242,20 @@
           "input": "Target Skill: Sponsorship Policy | Personal DB: EU Blue Card (Belgium).",
           "output_json": {
             "topic": "Sponsorship Policy",
-            "effort": "LOW",
-            "strategy": "Leverage EU Blue Card mobility rules to reduce hiring hesitation.",
-            "evidence_status": "FOUND_STRONG",
-            "evidence_snippet": "Currently holds an EU Blue Card in Belgium; eligible for intra-EU mobility.",
-            "reusability": "NO_MATCH"
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Currently holds an EU Blue Card in Belgium; eligible for intra-EU mobility."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "Current resume does not explicitly communicate work authorization or mobility status."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Leverage EU Blue Card mobility rules to reduce hiring hesitation.",
+              "estimated_action": "Add a concise work-authorization line near the header or summary."
+            }
           }
         }
       ],
@@ -249,11 +294,20 @@
           "input": "Target Skill: Applied Research | Personal DB: 3 Conference Papers (CVPR/ECCV).",
           "output_json": {
             "topic": "Applied Research",
-            "effort": "LOW",
-            "strategy": "Pivot from 'Paper Titles' to 'Problem Solved' and 'Efficiency Gains'.",
-            "evidence_status": "FOUND_STRONG",
-            "evidence_snippet": "3 Conference Papers in top-tier CV venues.",
-            "reusability": "EXACT_MATCH"
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "3 Conference Papers in top-tier CV venues."
+            },
+            "resume_reusability": {
+              "status": "MATCH",
+              "evidence_snippet": "Current resume already contains directly relevant research achievements and publication evidence."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 1,
+              "strategy": "Pivot from paper titles to business impact and efficiency gains rather than adding new evidence.",
+              "estimated_action": "Rewrite one publication-related bullet to emphasize problem solved, measurable impact, and deployment relevance."
+            }
           }
         }
       ],
@@ -292,11 +346,20 @@
           "input": "Target Skill: Containerization (Docker) | Personal DB: Found a Dockerfile in 2022 repo.",
           "output_json": {
             "topic": "Containerization (Docker)",
-            "effort": "LOW",
-            "strategy": "Rebrand 'Python Scripting' as 'Containerized Environment' since the artifact exists.",
-            "evidence_status": "FOUND_WEAK",
-            "evidence_snippet": "Found a simple Dockerfile in your 2022 hackathon repo.",
-            "reusability": "CONCEPT_MATCH"
+            "evidence_in_personal_db": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Found a simple Dockerfile in your 2022 hackathon repo."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Resume does not currently foreground containerization as a production capability."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 3,
+              "strategy": "Reframe the artifact as evidence of environment reproducibility and deployment awareness.",
+              "estimated_action": "Add one bullet mentioning Dockerized setup, reproducible execution, and environment isolation."
+            }
           }
         }
       ],
@@ -335,11 +398,20 @@
           "input": "Target Skill: Technical Leadership | Personal DB: Helped lab mates fix C++ memory leaks weekly.",
           "output_json": {
             "topic": "Technical Leadership",
-            "effort": "LOW",
-            "strategy": "Pivot from 'Collaborating' to 'Mentoring'. Quantify the debugging support as guidance.",
-            "evidence_status": "FOUND_STRONG",
-            "evidence_snippet": "Regularly guided 2 junior researchers in C++ memory management and research methodology.",
-            "reusability": "CONCEPT_MATCH"
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Regularly guided 2 junior researchers in C++ memory management and research methodology."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Current resume implies collaboration, but leadership and mentorship outcomes are not explicitly framed."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 3,
+              "strategy": "Pivot from 'collaborating' to 'mentoring' and quantify the debugging support as technical guidance.",
+              "estimated_action": "Rewrite one collaboration bullet to explicitly highlight coaching, guidance, or review responsibility."
+            }
           }
         }
       ],
@@ -378,11 +450,20 @@
           "input": "Target Skill: Rapid Prototyping | Personal DB: 3 Hackathon projects on GitHub.",
           "output_json": {
             "topic": "Rapid Prototyping",
-            "effort": "LOW",
-            "strategy": "Add a 'Side Projects' section highlighting Hackathon wins to demonstrate execution speed.",
-            "evidence_status": "FOUND_STRONG",
-            "evidence_snippet": "GitHub: 3 Hackathon projects built within 48-hour sprints.",
-            "reusability": "NO_MATCH"
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "GitHub: 3 Hackathon projects built within 48-hour sprints."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "Current resume does not prominently surface hackathon or rapid-delivery projects."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Add a Side Projects section highlighting hackathon wins to demonstrate execution speed and bias for action.",
+              "estimated_action": "Create or expand a Side Projects section with one concise bullet per fast-delivery project."
+            }
           }
         }
       ],

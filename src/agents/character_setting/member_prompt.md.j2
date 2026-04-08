@@ -62,10 +62,15 @@ Judge whether the person already has evidence, how reusable that evidence is, an
 {% endif %}
 
 ## Gap Analysis Guidance
-- evidence_status should reflect proof strength, not optimism.
-- reusability should reflect how directly current resume bullets can be reused.
-- strategy must be tactical and specific.
-- If no evidence exists, say so clearly in the JSON.
+- `evidence_in_personal_db.status` must be exactly one of: MATCH, PARTIAL, NO_MATCH.
+- `evidence_in_personal_db.evidence_snippet` must always be a string.
+- `resume_reusability.status` must be exactly one of: MATCH, PARTIAL, NO_MATCH.
+- `resume_reusability.evidence_snippet` must always be a string.
+- `effort_assessment` must include all of these fields: `level`, `score`, `strategy`, `estimated_action`.
+- `strategy` explains why this effort level is appropriate and how the gap should be framed.
+- `estimated_action` is the concrete next step the candidate should take.
+- Do not use substitute field names such as `rationale`, `reasoning`, `notes`, `summary`, or `advice` inside `effort_assessment`.
+- If there is no supporting evidence, use `NO_MATCH` and a string like `No direct evidence found.`
 
 {% elif mode == "ADVISOR" %}
 ## Task
