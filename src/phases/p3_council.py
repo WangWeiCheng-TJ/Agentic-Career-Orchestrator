@@ -1,6 +1,7 @@
 import os
 import glob
 import json
+from pickle import TRUE
 import sys
 from termcolor import colored, cprint
 from tqdm import tqdm
@@ -29,7 +30,7 @@ except ImportError as e:
 
 
 # === MOCK MODE (跳過 ChromaDB，測試 pipeline 用) ===
-USE_MOCK_DB = True
+USE_MOCK_DB = os.getenv("USE_MOCK_TOOLS", TRUE)
 
 MOCK_PERSONAL_DB = """
 === SOURCE: research_experience.md ===
@@ -298,7 +299,7 @@ def run_phase3_dynamic_execution(ap):
     cprint("\n🏛️  [Phase 3] EXPERT COUNCIL: Dynamic Diagnosis Pipeline", "magenta", attrs=['bold', 'reverse'])
     
     # === 加這段 argparse ===
-    
+    ap.add_argument("--use-mock-profile", default=USE_MOCK_DB, help="Directory containing dossier JSON files")
     ap.add_argument("--test-limit", type=int, default=None, help="Only process first N dossiers")
     ap.add_argument("--force-refresh", action="store_true", default=False)
     args = ap.parse_args()

@@ -42,7 +42,7 @@ The v2 architecture already introduced a tiered Mixture‑of‑Advisors flow, bu
 The _naive PoC_, mega prompting, is essentially wasting tokens of advanced LLM models while risking attention dilution. Considering a larger scale of usage (particularly when applied to synthetic dataset generation), the system is decoupled into a **tiered inference**, **Multi-Agent** system where a Router Agent executes an OODA loop to ground strategic analysis in real-world technical signals. Eventually, the filtering phase of the **orchestration** system filtered out the JDs that dont fit the hard constraints, while the other JDs are analyzed by an **expert council with dynamic members** to provide feedback and suggestions accordingly.
 
 
-#### ☁️ v3 (Ongoing): Time to Scale Up
+#### ☁️ v3 (GCP tbd): Time to Scale Up
 <details>
     <summary>
      Cloud-Ready Large-Scale Parallel Processing (AWS / GCP)
@@ -220,27 +220,30 @@ graph TD
    * **External Grounding:** The system actively gathers external context to "comprehend" the JD before analysis.
    * **Active Tools:**
       - **Salary Validator:** Queries external sources (mock Levels.fyi/Glassdoor) to verify if the ROI justifies the effort.
-      - **Team Investigation:** Searches arXiv/Google Scholar to verify if the hiring team is scientifically active.
+      - **Team Investigation:** Searches arXiv/Google Scholar to verify if the hiring team is scientifically active. 
+   * **Data-Parallel:**
+      - Since the context gatherings between JDs are independent, this phase is parallelized for better effeciency and work better with AWS/GCP.
 
 #### 3. Intelligent Triage & Gatekeeping (Phase 2)
    * **Hard Constraints Check:** A strict "Gatekeeper Agent" enforces physical survival constraints first.
    * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (EU Work Permit), **PhD Relevance**, and **Expertise mis-Matched** constraints.
    * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the analysis pipeline.
    * **Implementation Status**: Implemented as ``TriageAgent`` in ``src/phases/p2_triage.py``. Each dossier is enriched with a structured triage_result block (e.g., ``decision``, ``reason``, ``domain_mismatch``), and only dossiers that pass this gate are moved into the pending_council queue for downstream MoA routing.
+   * **Data-Parallel:** Since the Triage processes between JDs are independent, this phase is parallelized for better effeciency and work better with AWS/GCP.
 
 #### 4. Dynamic Mixture-of-Agents (Phase 3)
 - **Router-Based Diagnosis**: Instead of a single generic "Analysis Prompt", a Router Agent activates a small set of specialized reviewers based on the JD's domain and seniority. Example of the Council Members:
   - **Academic Analyst**: For research‑heavy roles (e.g., Research Scientist; focus: publication track record, topic alignment, lab/team fit).
   - **Engineering Lead**: For ML/Software roles (focus: deployment readiness, C++/systems skills, production constraints).
   - **Startup Scout**: For early‑stage companies (focus: equity vs. cash trade‑offs, runway, product risk, role ambiguity).
-
-- **Benefit**: Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
+  > Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
+  > Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
+- **Core System**: Implemented as a single-pass council. For each JD, the Router selects specialized advisors and calls each exactly once, storing their scores and rationales back into the dossier. No multi-round debate at this stage due to API cost.
+- **User Profile Integration**: Phase 3 and Phase 5 can optionally use user_profile.json (manual or auto-generated) for faster context retrieval, with automatic fallback to ChromaDB if unavailable; significantly reducing large-model API calls.
 
 - **New Implementation**: 
-  - **Core System**: Implemented as a single-pass council. For each JD, the Router selects specialized advisors and calls each exactly once, storing their scores and rationales back into the dossier. No multi-round debate at this stage due to API cost.
-  - **User Profile Integration**: ✅ User Profile Integration: Phase 3 and Phase 5 can optionally use user_profile.json (manual or auto-generated) for faster context retrieval, with automatic fallback to ChromaDB if unavailable; significantly reducing large-model API calls.
-
-Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
+  - **Expert-Level Parallelism within a Single JD:** The Router selects several advisors per JD, and each advisor LLM call is dispatched concurrently within the same dossier. 
+  > The council aggregation waits on the slowest expert, reducing per-JD council latency from O(k⋅t_{expert}) to O(max_k⋅t_{expert}).
 
         
 #### 5. Strategic Clustering (Phase 4 - The War Room)
@@ -290,10 +293,10 @@ docker-compose up -d --build
         * Fallback: If neither exists, the system will query ChromaDB on-the-fly (slower but functional)
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingests/resume_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
 
-    **Step 2**: The Hunt <br>(v2 pipeline - Phase 1-3 are currently run via phase scripts, `main.py` remains v1 legacy)
+    **Step 2**: The Hunt
     * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
     * Phase 1-3 (current v2 workflow):  
-        * _Run the phase scripts explicitly (until they are fully integrated into `src/main.py` in a later update)._  
+        * _Run the phase scripts explicitly_  
             ```bash            
             # Phase 1: Tool-augmented JD parsing
             docker-compose run --rm orchestrator python src/phases/p1_scout.py

@@ -212,3 +212,5 @@ __marimo__/
 AWS.md
 task-def.json
 override.json
+
+src/main.py
