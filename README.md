@@ -263,6 +263,82 @@ Phase 5 is not just another advisor; it is the **Chief Editor**. It synthesizes 
     * **Cloud:** AWS ECS/Fargate (Scalable data-parallel tasks).
 
 
+## ⚡ Quick Start & Setup
+
+### 1. Environment Configuration (`.env`)
+Create a `.env` file in the root directory. This is crucial for linking your local files (e.g., Google Drive) to the Docker container. (refer to .env_example)
+
+### 2. Directory Setup
+Refer to [Data Structure](#-data-structure)
+
+### 3. Launch the System
+Start the Docker container in detached mode:
+```bash
+docker-compose up -d --build
+```
+
+4. Memory Injection (Initialization)
+
+    **Step 1**: <br>Run these once initially, or whenever you update your Resume/AboutMe.md.
+    * Ingest Personal Knowledge (Identity):<br> ```docker-compose run --rm orchestrator python src/ingests/personal_data.py``` <br> Reads ```data/raw/AboutMe.md``` and whatever files in ```data/raw/``` to build the agent's core understanding of YOU.
+    * **[Optional] User Profile Acceleration:**
+        * Option A (Manual): Use NotebookLLM to generate a structured profile from your ``AboutMe.md``:
+            - Save it as `src/raw/user_profile.json`.
+            - This acts as a "cheat sheet" for Phase 3 and Phase 5, avoiding ChromaDB queries
+            - *Purpose:* NotebookLLM excels at handling long-context windows, producing a holistic "Meta-Summary" of your career that standard chunk-based RAG might miss.
+        * Option B (Auto): If you skip this step, the system will automatically generate ``auto_generated_user_profile.json`` from your raw data during ingestion
+        * Fallback: If neither exists, the system will query ChromaDB on-the-fly (slower but functional)
+    * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingests/resume_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
+
+    **Step 2**: The Hunt
+    * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
+    * Phase 1-3 (current v2 workflow):  
+        * _Run the phase scripts explicitly_  
+            ```bash            
+            # Phase 1: Tool-augmented JD parsing
+            docker-compose run --rm orchestrator python src/phases/p1_scout.py
+            --test-limit (number of testing JDs); --force-update (force update dossier); --max-workers (parallel workers)
+            
+            # Phase 2: Triage & Gatekeeping
+            docker-compose run --rm orchestrator python src/phases/p2_triage.py
+            same options as p1
+            
+            # Phase 3: MoA Council (dynamic advisors)
+            docker-compose run --rm orchestrator python src/phases/p3_council.py
+
+            # Phase 4: Strategic Clustering & ROI Ranking
+            docker-compose run --rm orchestrator python src/phases/p4_strategy.py
+
+            # Phase 5: War Room Editor (Execution Plans)
+            docker-compose run --rm orchestrator python src/phases/p5_advisor.py
+            ```
+    * Review Outputs: 
+        - Phase 1 Output: ```data/processed/dossiers/``` - Parsed JD dossiers with intelligence reports
+        - Phase 2 Output: ```data/processed/pending_council/``` - Triaged JDs that passed gatekeeping
+        - Phase 3 Output: ```data/processed/pending_council/``` - Enriched with MoA expert analysis
+        - Phase 4 Output: ```data/processed/battle_plan/```final_battle_plan.json - Clustered jobs with ROI scores
+        - Phase 5 Output: ```data/processed/editor_reports/``` - Structured action plans per job (Markdown tables)
+    * Workflow Tips:
+        - Run Phase 1-3 sequentially for new JD batches
+        - Run Phase 4 when you want to prioritize by ROI (e.g., weekly review)
+        - Run Phase 5 interactively: it shows clusters and lets you select which one to generate plans for
+
+    **Step 3**: Post-Battle Maintenance<br> When you receive an outcome (Reject/Interview):
+    * Move the JD folder from Ongoing to Rejected (on your local drive).
+    * Add an ```result.txt``` or ```reject_letter.txt``` inside the folder.
+    * Run Ingest History again to update the agent's memory:<br>```docker-compose run --rm orchestrator python src/ingest_history.py```
+
+## 🛠️ Tech Stack
+* **Orchestration:** Python, Google Generative AI SDK (Gemini API)
+* **Hybrid Model Architecture (Smart Gateway):**
+    * **Logic & Extraction:** Gemma-3-27b-it (Larger Quota)
+    * **Long-Context Retrieval:** Gemini-2.5-Flash (Daily Limit Optimized)
+    * **Reliability:** Pydantic for Structured Output enforcement (JSON Schema Validation) 🛡️
+* **Vector Store:** ChromaDB (Using default `all-MiniLM-L6-v2` for local embeddings)
+* **Environment:** Python 3.11 / Docker
+
+
+
 ## 📂 Data Structure
 The system automatically manages raw inputs and cached outputs:
 
