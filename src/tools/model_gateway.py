@@ -10,6 +10,15 @@ from dotenv import load_dotenv
 import pydantic
 
 # ==============================================================================
+# rate limiter for parallel processing ( parallel could easily hit the rate limit)
+# ==============================================================================
+import threading
+import time
+_call_lock = threading.Lock()
+_last_call_time = [0.0]
+MIN_INTERVAL = 2.5  # 秒
+
+# ==============================================================================
 # Tagged Protocol Parser (The New Secret Sauce)
 # ==============================================================================
 load_dotenv()
@@ -195,6 +204,14 @@ class SmartModelGateway:
         [Expert Council Edition] 
         整合: 14k TPM 哨兵、Pydantic/Function 雙模驗證、Gemma/Flash 自動導流。
         """
+        # ===== rate lock ====
+        with _call_lock:
+            elapsed = time.time() - _last_call_time[0]
+            if elapsed < MIN_INTERVAL:
+                time.sleep(MIN_INTERVAL - elapsed)
+            _last_call_time[0] = time.time()
+        # ===== rate lock ====
+
         # 1. 彈性參數抓取
         # 支援 schema=..., schema_model=..., 或位置參數 args[0]
         schema = kwargs.get('schema') or kwargs.get('schema_model')
@@ -222,8 +239,8 @@ class SmartModelGateway:
         
         # 自動分流邏輯
         if use_gemma_req and token_count > (tpm_limit - 1000):
-            print("171", tpm_limit, use_gemma_req, token_count)
-            input()
+            # print("171", tpm_limit, use_gemma_req, token_count)
+            # input()
             actual_use_gemma = False
             tqdm.write(colored(f"  ⚠️ TPM Sentinel: Prompt size ({token_count}) approaching {tpm_limit//1000}k limit. Auto-switching to Flash.", "yellow"))
         elif token_count > 5000:

@@ -1,72 +1,70 @@
-# Job Hunting Season 2: Agentic Career Orchestrator 
+# Job Hunting Season 3.0: Agentic Career Orchestrator 
 #### An ROI-Driven Multi-Agent System
 **Not a ghostwriter, just an assistant and probably strategist**
-> **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational; v3 in dev.
+> **Current Status:** v2 Released (Jan 2026) - Full Multi-Agent Pipeline Operational; v3 completed (parallel and AWS).
 
 
 ## 🎯 Motivation
 
-The primary motivation behind this project is to solve the extremely low signal-to-noise ratio in the current job market and the unsustainable time cost of high-quality applications.
+**The Meta-Goal: An Architectural Pilot for Autonomous Systems**
+While this project functions as a personal career tool, its core motivation lies in **research infrastructure**. Extending from my previous research in surveillance and privacy-preserving AI, I aim to build a **synthetic data generation pipeline** to tackle one of the greatest bottlenecks in domain development. By treating video generation models and task-specific LoRAs as "Agents," this research aims to leverage this same agentic workflow to significantly improve efficiency and reduce computational costs in the audio-visual domain.
 
-In job hunting, one must sift through hundreds of job descriptions to find the few that match complex constraints (e.g., visa rules, tech stack compatibility, remote work policies). Traditional keyword search fails to capture these semantic nuances. For example, a position that requires computer vision experience could drown in the title "Machine Learning Engineer". Manually parsing hundreds of JDs to find the few that align with specific constraints (e.g., Privacy-Preserving AI, European Visa sponsorship) is an exhausting and inefficient process that drains cognitive resources.
+This repository serves as an **architectural pilot**. By building a production-ready, local-first orchestrator to solve a tangible, real-world problem (my own job search), I am stress-testing the exact multi-agent patterns, parallel execution models, and context-injection pipelines needed for my future synthetic data research workflows.
 
-Furthermore, effective job hunting requires more than just reading; it demands **verification** (checking market salary, validating research alignment), **reflection** (comparing against past applications to avoid repeated mistakes), and **strategic execution** (prioritizing high-ROI opportunities and allocating effort efficiently). 
+**The Immediate Problem: The Low-Signal Job Market**
+Applied locally, this system solves a brutal bottleneck: the modern job hunt has an extremely low signal-to-noise ratio. Candidates must screen hundreds of job descriptions under hard constraints (visa feasibility, specific tech stacks, compensation, location strategy). Traditional keyword search fails to capture these semantic nuances, and manual reading does not scale.
 
-
-This project is to build an ROI-Driven Agentic System that automates the "low-level filtering" and "strategic intelligence gathering." This ensures that the human candidate can allocate their limited bandwidth exclusively to high-leverage opportunities, shifting focus from searching to crafting the perfect application.
-
-
-**Research Context:**  
-This project also serves as the architectural pilot for **Real-World Data-Driven Synthetic Surveillance Dataset Generation Pipeline**. By treating video generation models and task-specific LoRAs as "Agents," the future research aims to leverage this same agentic workflow to significantly improve efficiency and reduce computational costs in synthetic data generation.
+High-quality applications require deep research, external verification, and strategic gap analysis. This system automates the low-leverage execution: JD parsing, hard-constraint triage, and multi-perspective advisor analysis, freeing the human to focus purely on the high-leverage decisions: strategic effort allocation and final tailoring.
 
 ---
 
 ## 📖 Introduction
 
-This project implements a Multi-Agent RAG Orchestrator with a dynamic Mixture-of-Advisors (MoA) pattern, where a Router Agent activates specialized LLM-based agents per JD and aggregates their assessments into strategic decisions. 
+This project implements a a local-first multi-agent orchestration system for job-description analysis and application strategy. It combines structured dossier generation, rule-based triage, retrieval-backed user context, and a Router-driven **Mixture-of-Advisors** workflow that assigns each viable JD to a small set of specialized reviewers for skill and gap analysis.
 
-Unlike infra-level sparse Mixture-of-Agents (MoA) models with shared parameters inside a single network, each advisor here is an independent agent with its own prompt and memory, coordinated through orchestration rather than low-level model routing.
+Unlike infra-level sparse Mixture-of-Agents (MoA) models with shared parameters inside a single network, eaach advisor is not a separately fine-tuned model. Instead, the system reuses the same underlying LLM through separate API calls, while varying the advisor persona, evaluation philosophy, few-shot examples, and injected, isolated context. This creates a lightweight orchestration-level Mixture-of-Advisors pattern without maintaining multiple model weights.
 
-All core document storage (CVs, personal databases) remains **locally managed** via ChromaDB to maintain a structured local archive of user's career data, while the cloud API is used solely for reasoning tasks with sanitized inputs.
+In v3, the same orchestration image can run parallelly, either locally or in cloud environments(AWS), with local-first data management and optional S3-backed synchronization for scalable batch execution. 
 
 ### 🚀 System Evolution
 
 #### From v2 to v3
-> Transition from a single‑node batch pipeline to a cloud‑ready, large‑scale parallel orchestration layer across AWS/GCP.
+> _Transition from a single-node batch pipeline to a cloud-ready, large-scale parallel orchestration layer across AWS/GCP._
 
-The v2 architecture already introduced a tiered Mixture‑of‑Advisors flow, but execution remained essentially single‑node and sequential. v3 reuses a single orchestration image across local and cloud runtimes, with phase-specific workers launched via different commands but governed by shared input/output schemas. Scalable intake(*data‑parallel intake workers (Phase 1-2)*) and expert-council reasoning(*planner‑plus‑parallel‑advisors council (Phase 3)*) run on AWS/GCP, while the resulting dossiers are synchronized back to the local environment for downstream clustering and execution planning.
+The v2 architecture already introduced a tiered Mixture-of-Advisors flow, but execution remained essentially single-node and sequential. v3 reuses a single orchestration image across local and cloud runtimes, with phase-specific workers launched via different commands but governed by shared input/output schemas. Scalable reasoning phases: *data-parallel intake workers (Phase 1-2)* and *expert-level parallel council (Phase 3)*, can run concurrently on AWS/GCP, while the resulting dossiers are synchronized back to the local environment for downstream clustering, ROI ranking, and execution planning.
 
 #### From v1 to v2
-> Transition from Mega-prompting to a orchastration framework with Mixture-of-Agents, enhancing Context-Awareness through Attention Partitioning while optimizing cost for both tokens and expensive LLM models.
+> _Transition from Mega-prompting to an orchestration framework with Mixture-of-Advisors, enhancing context-awareness through attention partitioning while optimizing token costs._
 
-The _naive PoC_, mega prompting, is essentially wasting tokens of advanced LLM models while risking attention dilution. Considering a larger scale of usage (particularly when applied to synthetic dataset generation), the system is decoupled into a **tiered inference**, **Multi-Agent** system where a Router Agent executes an OODA loop to ground strategic analysis in real-world technical signals. Eventually, the filtering phase of the **orchestration** system filtered out the JDs that dont fit the hard constraints, while the other JDs are analyzed by an **expert council with dynamic members** to provide feedback and suggestions accordingly.
+The *naive PoC* (v1) relied on mega-prompting, which inherently wasted tokens of advanced LLM models and risked severe attention dilution when processing lengthy constraints. Anticipating a larger scale of usage, particularly for future applications in synthetic dataset generation, the system was decoupled into a **tiered, multi-agent orchestration**. 
 
+Instead of a single massive prompt, the system now utilizes an OODA-inspired loop: a Router Agent first grounds strategic analysis in real-world technical signals; the Triage phase rigidly filters out JDs that fail hard physical constraints (e.g., visa sponsorship); and finally, surviving JDs are routed to an **expert council with dynamic members**. This allows each selected advisor to evaluate the opportunity strictly within their designated domain, providing highly focused and actionable feedback.
 
-##### ☁️ v3 (Ongoing): Time to Scale Up
+#### ☁️ v3 (Ongoing): Time to Scale Up
 <details>
     <summary>
-     Cloud-Ready Large-Scale Parallel Processing (AWS / GCP)
+     Cloud-Ready Large-Scale Parallel Processing (AWS Native)
     </summary>
 
 - **Sequential-to-parallel expert execution**:
-v2 already routes dossiers to relevant experts, but executes each expert call sequentially via per-expert loops; v3 upgrades this into parallelizable advisor jobs for scalable cloud execution. Decomposes Phase 3 into a planner → dual parallel fan-out → aggregator pipeline, where expert skill extraction and gap analysis are executed concurrently across the selected advisor set before being consolidated into a final council report.
+v2 already routes dossiers to relevant experts, but executes each expert call sequentially via per-expert loops. v3 upgrades this into parallelizable advisor jobs for scalable cloud execution. It decomposes Phase 3 into a planner → dual parallel fan-out → aggregator pipeline, where expert skill extraction and gap analysis are executed concurrently across the selected advisor set before being consolidated into a final council report.
 
 - **Single-image, multi-role deployment**:
 The orchestration framework is packaged as a reusable container image, where phase-specific roles are launched by overriding runtime commands rather than maintaining separate stacks.
 
-- **Persistent council artifacts for downstream phases**
-Instead of only mutating in-place dossier files, v3 formalizes council outputs as reusable artifacts that can be pulled back into local Phase 4/5 workflows.
+- **Persistent council artifacts for downstream phases**:
+Instead of only mutating in-place dossier files, v3 formalizes council outputs as reusable artifacts that can be safely written to object storage (S3) and later pulled back into local Phase 4/5 workflows.
 
-- **Cloud execution templates for AWS/GCP**
-v3 introduces cloud-ready command templates and deployment patterns so the same image can run on local machines, AWS, or GCP with shared schemas and phase boundaries.
+- **Cloud execution templates for AWS**:
+v3 introduces cloud-ready command templates and IAM deployment patterns so the exact same image can run seamlessly on local machines or AWS ECS/Fargate with shared schemas and phase boundaries. (GCP support is planned but not yet validated).
 </details>
 
-##### 🧑‍⚖️ v2 (Current): Summon the Expert Council
+#### 🧑‍⚖️ v2 (Current): Summon the Expert Council
 <details>
     <summary>
     Observe, Orient, Decide, and Act: Decision orchestration with a dynamic MoA
     </summary>
-This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing a 4-step OODA loop:
+This upgrade transforms the system from a passive analyzer to an active decision orchestrator, executing an OODA-inspired loop:
 
 - **Reason (Dynamic Mixture-of-Advisors (MoA))**:  
   Introduces a Router Agent that dynamically assembles an Expert Council based on the JD's nature. For example, a "Senior Research Scientist" role triggers the Academic Analyst (evaluating research alignment) and the Engineering Lead (evaluating technical depth and team fit), while a startup role may additionally trigger the Startup Scout (equity/risk).
@@ -81,7 +79,7 @@ This upgrade transforms the system from a passive analyzer to an active decision
   Actively rejects non-viable roles (e.g., visa infeasibility, location/compensation mismatch, PhD relevance constraints) before they consume human attention or additional compute.
 </details>
 
-##### 🧩 v1 (Legacy): The Naive Way
+#### 🧩 v1 (Legacy): The Naive Way
 <details>
     <summary>
  A Rigid "Smart Filter"
@@ -91,14 +89,7 @@ This upgrade transforms the system from a passive analyzer to an active decision
 - **Isolated & Internal**: <br>Relied solely on local text comparison; blind to external market realities (e.g., actual salary data, active research groups).
 - **Siloed Execution**: <br>Treated every JD as an independent event, lacking the ability to prioritize based on relative ROI.
 </details>
-   
-
-
-
-
 ---
-
-
 
 ## 🏗️ System Architecture
 
@@ -212,56 +203,65 @@ graph TD
 
 
 ## 🚀 Key Features
+
 #### 1. The Arsenal: Semantic Resume Indexing (Level 0)
-   * **Pre-processing Agent:** An asynchronous `Indexer Agent` breaks down the user's Master CV and Papers into semantic fragments tagged by attributes (e.g., `#Privacy`, `#ComputerVision`, `#Leadership`).
+   * **Pre-processing Agent:** An asynchronous `Indexer Agent` breaks down the user's Master CV and publications into semantic fragments tagged by attributes (e.g., `#Privacy`, `#ComputerVision`, `#Leadership`).
    * **Vector-Based Retrieval:** Uses **ChromaDB** to retrieve only the relevant "skills blocks" needed for a specific JD, preventing context window pollution with irrelevant experiences.
 
 #### 2. Tool-Augmented Intelligence (Phase 1)
    * **External Grounding:** The system actively gathers external context to "comprehend" the JD before analysis.
    * **Active Tools:**
       - **Salary Validator:** Queries external sources (mock Levels.fyi/Glassdoor) to verify if the ROI justifies the effort.
-      - **Team Investigation:** Searches arXiv/Google Scholar to verify if the hiring team is scientifically active.
+      - **Team Investigation:** Searches arXiv/Google Scholar to verify if the hiring team is scientifically active. 
+   * **Data-Parallel Intake:** Since context gathering for each JD is independent, this phase is fully data-parallel. It scales efficiently via local thread pools or horizontally across AWS/GCP task definitions.
 
 #### 3. Intelligent Triage & Gatekeeping (Phase 2)
    * **Hard Constraints Check:** A strict "Gatekeeper Agent" enforces physical survival constraints first.
-   * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (EU Work Permit), **PhD Relevance**, and **Expertise mis-Matched** constraints.
-   * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the analysis pipeline.
-   * **Implementation Status**: Implemented as ``TriageAgent`` in ``src/phases/p2_triage.py``. Each dossier is enriched with a structured triage_result block (e.g., ``decision``, ``reason``, ``domain_mismatch``), and only dossiers that pass this gate are moved into the pending_council queue for downstream MoA routing.
+   * **Filtering Logic:** Automatically rejects roles based on **Visa Sponsorship** feasibility (e.g., EU Work Permit), **PhD Relevance**, and **Expertise Mismatch**.
+   * **Impact:** Reduces compute costs and cognitive load by ensuring only "playable" opportunities enter the expensive reasoning pipeline.
+   * **Implementation:** Implemented as `TriageAgent`. Each dossier is enriched with a structured `triage_result` block (e.g., `decision`, `reason`, `domain_mismatch`). Only dossiers passing this gate proceed to the `pending_council` queue.
+   * **Data-Parallel Routing:** Like Phase 1, triage evaluations are independent per JD and execute concurrently, maximizing throughput for large batches.
 
-#### 4. Dynamic Mixture-of-Agents (Phase 3)
-- **Router-Based Diagnosis**: Instead of a single generic "Analysis Prompt", a Router Agent activates a small set of specialized reviewers based on the JD's domain and seniority. Example of the Council Members:
-  - **Academic Analyst**: For research‑heavy roles (e.g., Research Scientist; focus: publication track record, topic alignment, lab/team fit).
+#### 4. Dynamic Mixture-of-Advisors (Phase 3)
+- **Router-Based Diagnosis**: Instead of a single generic "Analysis Prompt", a Router Agent activates a small set of specialized reviewers based on the JD's domain and seniority. Example Council Members:
+  - **Academic Analyst**: For research-heavy roles (focus: publication track record, topic alignment, lab/team fit).
   - **Engineering Lead**: For ML/Software roles (focus: deployment readiness, C++/systems skills, production constraints).
-  - **Startup Scout**: For early‑stage companies (focus: equity vs. cash trade‑offs, runway, product risk, role ambiguity).
+  - **Startup Scout**: For early-stage companies (focus: equity vs. cash trade-offs, runway, product risk, role ambiguity).
+  > *Architectural Note:* This behaves as an orchestration-level Mixture-of-Advisors (MoA). It produces domain-specific, role-aware gap analysis by routing each JD to the most relevant advisors, instantiated via separate API calls rather than treating all roles with a single monolithic prompt.
+- **Expert-Level Parallelism:** Within a single JD dossier, the Router concurrently dispatches the selected advisors. The council aggregation waits only on the slowest expert, effectively reducing per-JD latency from $O(k \cdot t_{expert})$ to $O(\max_k \cdot t_{expert})$.
+- **Profile Acceleration**: Phase 3 (and Phase 5) optionally utilize a structured `user_profile.json` (auto-generated via NotebookLLM) for rapid context injection, falling back to ChromaDB chunk retrieval only when necessary. This significantly reduces large-model API costs.
 
-- **Benefit**: Produces domain‑specific, role‑aware gap analysis instead of generic career advice, by routing each JD to the most relevant advisors rather than treating all roles with a single monolithic prompt.
-
-- **New Implementation**: 
-  - **Core System**: Implemented as a single-pass council. For each JD, the Router selects specialized advisors and calls each exactly once, storing their scores and rationales back into the dossier. No multi-round debate at this stage due to API cost.
-  - **User Profile Integration**: ✅ User Profile Integration: Phase 3 and Phase 5 can optionally use user_profile.json (manual or auto-generated) for faster context retrieval, with automatic fallback to ChromaDB if unavailable; significantly reducing large-model API calls.
-
-Architecturally this behaves like a Mixture‑of‑Advisors (MoA) in a multi‑agent system, not an infra‑level sparse MoE model.
-
-        
 #### 5. Strategic Clustering (Phase 4 - The War Room)
-   * **Adaptive DBSCAN Engine:** Uses semantically-aware density clustering (e.g., HDBSCAN) to group jobs based on text embedding similarity. The hyperparameters are selected automatically (knee point) that dynamically calculates the optimal `eps` distance, ensuring clusters are tight and meaningful without manual guessing.
-    * **Flavor Extraction:** Summarize the common skill domain of each cluster (e.g., *"Cluster 0: GenAI Security"*, *"Cluster 1: ML Infrastructure"*) by analyzing common keywords in the vector space.
-    * **Battle Plan Generation:** Outputs a structured JSON map (`battle_plan.json`) ranking clusters by **ROI Score** (Cluster Size × Average Match Score), separating high-value targets from "Noise" (outliers).
-
+   * **Adaptive DBSCAN Engine:** Uses semantically-aware density clustering (HDBSCAN) to group jobs based on text embedding similarity. Hyperparameters are selected automatically via knee-point detection to dynamically calculate the optimal `eps` distance, ensuring tight clusters without manual guessing.
+   * **Flavor Extraction:** Summarizes the common skill domain of each cluster (e.g., *"Cluster 0: GenAI Security"*, *"Cluster 1: ML Infrastructure"*) by analyzing keyword centroids in the vector space.
+   * **Battle Plan Generation:** Outputs a structured JSON map (`battle_plan.json`) ranking clusters by **ROI Score** (Cluster Size × Average Match Score), cleanly separating high-value targets from outlier noise.
 
 #### 6. Advisory Briefing Agent (Phase 5)
+Phase 5 is not just another advisor; it is the **Chief Editor**. It synthesizes the "Expert Demands" (from Phase 3) with the "Candidate's Ammo" (Resume Database) to generate structured execution guidance.
 
-Phase 5 is not just an advisor; it is the **Chief Editor**. It synthesizes the "Expert Demands" (from Phase 3) with the "Candidate's Ammo" (Resume Database) to generate structured execution guidance.
-
-- **Structured Action Plans:** Instead of a fixed-length list, the Editor generates a dynamic, exhaustive list of directives to cover ALL expert demands and showcase relevant experience:
-  - **REUSE:** Identifies perfect matches in the existing resume bullets.
-  - **TWEAK:** Suggests specific keyword modifications (e.g., "Change 'Cloud' to 'AWS EKS'") into existing bullets.
+- **Structured Action Plans:** Instead of a generic checklist, the Editor generates a dynamic, exhaustive list of directives to cover all expert demands:
+  - **REUSE:** Identifies perfect matches in existing resume bullets.
+  - **TWEAK:** Suggests specific keyword modifications (e.g., "Change 'Cloud' to 'AWS EKS'") for existing bullets.
   - **NEW:** Proposes brand-new "Gap Filler" bullets using transferable skills (STAR format).
   - **LETTER:** Recommends narrative angles for the Cover Letter.
+- **Conflict Resolution Core:** Applies a strict "Editor-in-Chief" philosophy (e.g., Technical Depth > HR Fluff, Safety > Risk) to resolve conflicting advice from different Phase 3 experts.
+- **Role:** Acts as a strategic **assistant** (not a ghostwriter), helping candidates efficiently locate and organize relevant experience.
 
-- **Conflict Resolution Core:** Applies a strict "Editor-in-Chief" philosophy (e.g., Technical Depth > HR Fluff, Safety > Risk) to resolve conflicting advice from different experts.
+## 🛠️ Tech Stack
+* **Core Orchestration:** Python 3.11, Docker, Google Generative AI SDK
+* **Hybrid Inference Architecture (Smart Gateway):**
+    * **Simplier Tasks:** `Gemma-3-27b-it` (Larger Quota) for deep reasoning and expert council analysis.
+    * **Long-Context:** `Gemini-2.5-Flash` (Daily Limit Optimized) for processing large dossiers and context ingestion.
+    * **Reliability Layer:** `Pydantic` for strict Structured Output enforcement (JSON Schema validation). 🛡️
+* **Data & State Management:** 
+    * **Semantic Embeddings:** `gemini-embedding-001` (via Google Generative AI API) for text vectorization and dual-weighted feature mixing (Must-Haves vs. Nice-to-Haves).
+    * **Semantic Clustering (Phase 4):** `scikit-learn` (`HDBSCAN`, `DBSCAN`, `AgglomerativeClustering`) for dynamic, density-based grouping of job opportunities.
+    * **Local Context Retrieval:** `ChromaDB` for local resume and publication vector storage.
+    * **Cloud State (v3):** AWS S3 for parallel batch execution state synchronization.
+* **Execution Environment:** 
+    * **Local:** Docker Compose (Local-first processing & interactive editing).
+    * **Cloud:** AWS ECS/Fargate (Scalable data-parallel tasks).
 
-- **Role:** Acts as a strategic **assistant** (not a ghostwriter), helping candidates efficiently locate and organize relevant experience through structured action items.
 
 ## ⚡ Quick Start & Setup
 
@@ -290,17 +290,19 @@ docker-compose up -d --build
         * Fallback: If neither exists, the system will query ChromaDB on-the-fly (slower but functional)
     * Ingest Battle History (Experience):<br> ```docker-compose run --rm orchestrator python src/ingests/resume_history.py``` <br> Scans your ```LOCAL_PATH_TO_...``` folders to index past applications for the "War Room" recall feature.
 
-    **Step 2**: The Hunt <br>(v2 pipeline - Phase 1-3 are currently run via phase scripts, `main.py` remains v1 legacy)
+    **Step 2**: The Hunt
     * Feed: Drop new JD PDFs (or images) into ```data/jds/```.
     * Phase 1-3 (current v2 workflow):  
-        * _Run the phase scripts explicitly (until they are fully integrated into `src/main.py` in a later update)._  
+        * _Run the phase scripts explicitly_  
             ```bash            
             # Phase 1: Tool-augmented JD parsing
             docker-compose run --rm orchestrator python src/phases/p1_scout.py
-
+            --test-limit (number of testing JDs); --force-update (force update dossier); --max-workers (parallel workers)
+            
             # Phase 2: Triage & Gatekeeping
             docker-compose run --rm orchestrator python src/phases/p2_triage.py
-
+            same options as p1
+            
             # Phase 3: MoA Council (dynamic advisors)
             docker-compose run --rm orchestrator python src/phases/p3_council.py
 
@@ -330,10 +332,11 @@ docker-compose up -d --build
 * **Orchestration:** Python, Google Generative AI SDK (Gemini API)
 * **Hybrid Model Architecture (Smart Gateway):**
     * **Logic & Extraction:** Gemma-3-27b-it (Larger Quota)
-    * **Long-Context Retrieval:** Gemini-2.5-Flash (High TPM, Daily Limit Optimized)
+    * **Long-Context Retrieval:** Gemini-2.5-Flash (Daily Limit Optimized)
     * **Reliability:** Pydantic for Structured Output enforcement (JSON Schema Validation) 🛡️
 * **Vector Store:** ChromaDB (Using default `all-MiniLM-L6-v2` for local embeddings)
 * **Environment:** Python 3.11 / Docker
+
 
 
 ## 📂 Data Structure

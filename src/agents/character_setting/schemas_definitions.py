@@ -39,32 +39,22 @@ GAP_EFFORT_SCHEMA = """
     {
       "skill_ref_id": "string (must match Phase 1 ID)",
       "topic": "string",
-      
-      # 1. Evidence Check (Capability: Can I do it?)
+
       "evidence_in_personal_db": {
-        "status": "FOUND_STRONG | FOUND_WEAK | NOT_FOUND",
-        "evidence_snippet": "string (Source material found in papers/github/notes)",
-        "gap_conclusion": "SKILL_CONFIRMED | SKILL_MISSING" 
+        "status": "MATCH | PARTIAL | NO_MATCH",
+        "evidence_snippet": "string (specific evidence found, or 'No direct evidence found.')"
       },
 
-      # 2. Reusability Check (Writing Cost: Do I have a draft?)
       "resume_reusability": {
-        "status": "EXACT_MATCH | CONCEPT_MATCH | NO_MATCH",
-        "closest_existing_bullet": "string (The old sentence found, or null)",
-        "modification_required": "TWEAK_ONLY | TWIST_ANGLE | NEW_CREATION"
+        "status": "MATCH | PARTIAL | NO_MATCH",
+        "evidence_snippet": "string (existing resume bullet or 'No reusable bullet found.')"
       },
 
-      # 3. Effort Level (Action Cost)
       "effort_assessment": {
-        "level": "NONE | LOW | MEDIUM | HIGH",
-        "score": 1-10, 
-        "reason": "string (e.g., 'Found bullet point but needs to shift from Research angle to Engineering angle')"
-      },
-      
-      # 4. Action for Advisor
-      "fixing_strategy": {
-        "action": "KEEP_AS_IS | TWEAK_KEYWORDS | TWIST_VIEWPOINT | WRITE_FROM_SCRATCH | IGNORE",
-        "instruction": "string (e.g., 'Twist the PyTorch loader experience to emphasize Latency Optimization instead of Novelty')"
+        "level": "LOW | MEDIUM | HIGH | BLOCKER",
+        "score": "integer 1-10",
+        "strategy": "string (why this effort level, how to frame the gap)",
+        "estimated_action": "string (concrete next step for the candidate)"
       }
     }
   ]

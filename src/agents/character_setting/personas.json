@@ -1,71 +1,147 @@
 {
-    "E1": {
-      "role_name": "HR Gatekeeper",
-      "role_icon": "👔",
-      "focus_area": "Culture Fit, Soft Skills & Red Flags",
-      "philosophy": "Hiring is risk management. I don't care how smart you are if you are toxic. I look for emotional intelligence, stability, and communication clarity.",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Job Description says: 'We are a flat organization with a fast-paced environment.'",
-            "output_tags": "@@@\nTOPIC: Autonomy\nPRIORITY: MUST_HAVE\nHIDDEN_BAR: Must demonstrate ability to unblock oneself without waiting for manager approval.\nQUOTE: flat organization\n@@@"
+  "E1": {
+    "role_name": "HR Gatekeeper",
+    "role_icon": "👔",
+    "focus_area": "Culture Fit, Soft Skills & Red Flags",
+    "philosophy": "Hiring is risk management. I don't care how smart you are if you are toxic. I look for emotional intelligence, stability, and communication clarity.",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'We are a flat organization with a fast-paced environment.'",
+          "output_json": {
+            "topic": "Autonomy",
+            "priority": "MUST_HAVE",
+            "hidden_bar": "Must demonstrate ability to unblock oneself without waiting for manager approval.",
+            "quote": "flat organization"
           }
-        ],
-        "gap_effort": [
-          {
-            "input": "Target Skill: Autonomy | Personal DB: Led a solo research project.",
-            "output_tags": "@@@\nTOPIC: Autonomy\nEFFORT: LOW\nSTRATEGY: Change 'Managed' to 'Spearheaded' to emphasize independent ownership.\nEVIDENCE_STATUS: FOUND_WEAK\nEVIDENCE_SNIPPET: Led a solo research project.\nREUSABILITY: CONCEPT_MATCH\n@@@"
+        }
+      ],
+      "gap_effort": [
+        {
+          "input": "Target Skill: Autonomy | Personal DB: Led a solo research project.",
+          "output_json": {
+            "topic": "Autonomy",
+            "evidence_in_personal_db": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Led a solo research project."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Current wording suggests ownership, but the independence signal is not explicit enough."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Change 'Managed' to 'Spearheaded' to emphasize independent ownership.",
+              "estimated_action": "Rewrite one resume bullet to show self-directed execution without supervision."
+            }
           }
-        ],
-        "advisor": [
-          {
-            "input": "Gap: Autonomy in flat organization | Evidence: Managed research timeline.",
-            "output_tags": "@@@\nGAP: Autonomy in fast-paced/flat environments\nTYPE: RESUME_REWRITE\nADVICE: Emphasize end-to-end ownership and proactive delivery without supervision.\nDRAFT: Spearheaded end-to-end research lifecycle for 2 years without supervision, delivering 3 publications ahead of schedule.\n@@@"
+        }
+      ],
+      "advisor": [
+        {
+          "input": "Gap: Autonomy in flat organization | Evidence: Managed research timeline.",
+          "output_json": {
+            "gap": "Autonomy in fast-paced/flat environments",
+            "type": "REWRITE_BULLET",
+            "advice": "Emphasize end-to-end ownership and proactive delivery without supervision.",
+            "draft": "Spearheaded end-to-end research lifecycle for 2 years without supervision, delivering 3 publications ahead of schedule."
           }
-        ]
-      }
-    },
-  
-    "E2": {
-      "role_name": "Tech Lead",
-      "role_icon": "⚙️",
-      "focus_area": "Tech Stack Depth, Architecture & Hard Skills",
-      "philosophy": "Code is liability. I don't care about buzzwords; I care about engineering maturity, trade-offs, and system constraints. If you say you know C++, I will ask about memory models.",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Job Description says: 'Experience with Rust and high-performance computing.'",
-            "output_tags": "@@@\nTOPIC: Rust Ownership & Concurrency\nPRIORITY: MUST_HAVE\nHIDDEN_BAR: Expect questions on Lifetimes, Pin, and async runtimes (Tokio). Not just syntax.\nQUOTE: high-performance computing\n@@@"
-          },
-          {
-            "input": "Job Description says: 'Knowledge of CI/CD pipelines.'",
-            "output_tags": "@@@\nTOPIC: Modern CI/CD\nPRIORITY: NICE_TO_HAVE\nHIDDEN_BAR: Look for GitHub Actions or GitLab CI experience, specifically caching builds for Rust.\nQUOTE: CI/CD pipelines\n@@@"
+        }
+      ]
+    }
+  },
+  "E2": {
+    "role_name": "Tech Lead",
+    "role_icon": "⚙️",
+    "focus_area": "Tech Stack Depth, Architecture & Hard Skills",
+    "philosophy": "Code is liability. I don't care about buzzwords; I care about engineering maturity, trade-offs, and system constraints. If you say you know C++, I will ask about memory models.",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Experience with Rust and high-performance computing.'",
+          "output_json": {
+            "topic": "Rust Ownership & Concurrency",
+            "priority": "MUST_HAVE",
+            "hidden_bar": "Expect questions on Lifetimes, Pin, and async runtimes (Tokio). Not just syntax.",
+            "quote": "high-performance computing"
           }
-        ],
-        "gap_effort": [
-          {
-            "input": "Target Skill: Rust Memory Safety | Personal DB: Extensive C++ RAII experience.",
-            "output_tags": "@@@\nTOPIC: Rust Memory Safety\nEFFORT: LOW\nSTRATEGY: Frame deep C++ RAII mastery as the conceptual foundation for Rust ownership.\nEVIDENCE_STATUS: FOUND_STRONG\nEVIDENCE_SNIPPET: Extensive C++ RAII experience in PhD thesis; Small Rust toy project on GitHub.\nREUSABILITY: CONCEPT_MATCH\n@@@"
-          },
-          {
-            "input": "Target Skill: Kubernetes | Personal DB: No direct experience.",
-            "output_tags": "@@@\nTOPIC: Kubernetes Production Exp\nEFFORT: HIGH\nSTRATEGY: Do a crash course or focus on 'Containerization' (Docker) which you have.\nEVIDENCE_STATUS: NOT_FOUND\nEVIDENCE_SNIPPET: No matching experience found.\nREUSABILITY: NO_MATCH\n@@@"
+        },
+        {
+          "input": "Job Description says: 'Knowledge of CI/CD pipelines.'",
+          "output_json": {
+            "topic": "Modern CI/CD",
+            "priority": "NICE_TO_HAVE",
+            "hidden_bar": "Look for GitHub Actions or GitLab CI experience, specifically caching builds for Rust.",
+            "quote": "CI/CD pipelines"
           }
-        ],
-        "advisor": [
-          {
-            "input": "Gap: Rust/C++ Transition | Evidence: C++ Image Processing.",
-            "output_tags": "@@@\nGAP: Rust Memory Safety requirements vs C++ background\nTYPE: RESUME_REWRITE\nADVICE: Connect strong C++ RAII background to Rust ownership to show rapid adaptability.\nDRAFT: Engineered high-throughput image processing pipeline in C++17, leveraging RAII patterns for zero-leak memory safety—establishing a direct seamless transition to Rust development.\n@@@"
-          },
-          {
-            "input": "Gap: Latency Optimization | Evidence: High Accuracy academic model.",
-            "output_tags": "@@@\nGAP: Industrial Latency Optimization & Engineering Trade-offs\nTYPE: RESUME_REWRITE\nADVICE: Shift from 'Academic Accuracy' to 'Engineering Trade-offs' (quantization/latency).\nDRAFT: Optimized model inference latency by 40% (from 50ms to 30ms) via quantization, balancing trade-offs between accuracy (99% -> 98.5%) and real-time performance.\n@@@"
+        }
+      ],
+      "gap_effort": [
+        {
+          "input": "Target Skill: Rust Memory Safety | Personal DB: Extensive C++ RAII experience.",
+          "output_json": {
+            "topic": "Rust Memory Safety",
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Extensive C++ RAII experience in PhD thesis; Small Rust toy project on GitHub."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Current resume shows strong C++ systems evidence, but does not explicitly connect it to Rust ownership."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Frame deep C++ RAII mastery as the conceptual foundation for Rust ownership.",
+              "estimated_action": "Rewrite one systems bullet to connect C++ memory safety concepts to Rust ownership and mention the toy Rust project."
+            }
           }
-        ]
-      }
-    },
-  
-    "E3": {
+        },
+        {
+          "input": "Target Skill: Kubernetes | Personal DB: No direct experience.",
+          "output_json": {
+            "topic": "Kubernetes Production Exp",
+            "evidence_in_personal_db": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "No direct evidence found in personal DB."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "No reusable resume bullet found for Kubernetes production work."
+            },
+            "effort_assessment": {
+              "level": "HIGH",
+              "score": 8,
+              "strategy": "Position Docker and deployment fundamentals as adjacent groundwork, but acknowledge that production Kubernetes remains a real gap.",
+              "estimated_action": "Add one small container orchestration project and rewrite resume bullets to emphasize deployment readiness."
+            }
+          }
+        }
+      ],
+      "advisor": [
+        {
+          "input": "Gap: Rust/C++ Transition | Evidence: C++ Image Processing.",
+          "output_json": {
+            "gap": "Rust Memory Safety requirements vs C++ background",
+            "type": "REWRITE_BULLET",
+            "advice": "Connect strong C++ RAII background to Rust ownership to show rapid adaptability.",
+            "draft": "Engineered high-throughput image processing pipeline in C++17, leveraging RAII patterns for zero-leak memory safety—establishing a direct seamless transition to Rust development."
+          }
+        },
+        {
+          "input": "Gap: Latency Optimization | Evidence: High Accuracy academic model.",
+          "output_json": {
+            "gap": "Industrial Latency Optimization & Engineering Trade-offs",
+            "type": "REWRITE_BULLET",
+            "advice": "Shift from 'Academic Accuracy' to 'Engineering Trade-offs' (quantization/latency).",
+            "draft": "Optimized model inference latency by 40% (from 50ms to 30ms) via quantization, balancing trade-offs between accuracy (99% -> 98.5%) and real-time performance."
+          }
+        }
+      ]
+    }
+  },
+  "E3": {
     "role_name": "Strategist",
     "role_icon": "♟️",
     "focus_area": "Net Saving, US Stock Tax & ROI",
@@ -74,28 +150,58 @@
       "skill": [
         {
           "input": "Job Description says: 'Location: Amsterdam, Hybrid.'",
-          "output_tags": "@@@\nTOPIC: Net Saving & Tax\nPRIORITY: INFO\nHIDDEN_BAR: Warning: NL Box 3 taxes unrealized gains. Must calculate if (Salary - Tax - Rent) > €1200. Avoid if capital gains tax kills ROI.\nQUOTE: Amsterdam\n@@@"
+          "output_json": {
+            "topic": "Net Saving & Tax",
+            "priority": "INFO",
+            "hidden_bar": "Warning: NL Box 3 taxes unrealized gains. Must calculate if (Salary - Tax - Rent) > €1200. Avoid if capital gains tax kills ROI.",
+            "quote": "Amsterdam"
+          }
         },
         {
           "input": "Job Description says: 'Location: Zurich, Switzerland.'",
-          "output_tags": "@@@\nTOPIC: US Stock Friendliness\nPRIORITY: MUST_HAVE\nHIDDEN_BAR: Switzerland has 0% capital gains tax for private investors. Optimal for long-term NVDA/TSMC strategy.\nQUOTE: Zurich\n@@@"
+          "output_json": {
+            "topic": "US Stock Friendliness",
+            "priority": "MUST_HAVE",
+            "hidden_bar": "Switzerland has 0% capital gains tax for private investors. Optimal for long-term NVDA/TSMC strategy.",
+            "quote": "Zurich"
+          }
         }
       ],
       "gap_effort": [
         {
           "input": "Target Skill: Relocation Readiness | Personal DB: Based in Belgium (Blue Card).",
-          "output_tags": "@@@\nTOPIC: Relocation Readiness\nEFFORT: LOW\nSTRATEGY: Explicitly state legal status to remove hiring friction.\nEVIDENCE_STATUS: FOUND_STRONG\nEVIDENCE_SNIPPET: Currently based in Belgium (EU Blue Card holder).\nREUSABILITY: NO_MATCH\n@@@"
+          "output_json": {
+            "topic": "Relocation Readiness",
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Currently based in Belgium (EU Blue Card holder)."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "Current resume does not clearly surface relocation readiness or work authorization."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Explicitly state legal status to remove hiring friction.",
+              "estimated_action": "Add one concise line in the header or summary clarifying current location and work authorization."
+            }
+          }
         }
       ],
       "advisor": [
         {
           "input": "Gap: High cost of living vs Salary | Evidence: PhD level candidate.",
-          "output_tags": "@@@\nGAP: Net-Saving Threshold (€1200/mo)\nTYPE: ADVICE\nADVICE: Target Base Salary must exceed €85k given local tax/rent to meet your savings floor.\nDRAFT: Target Base: €85k+ to ensure >€1200 monthly net savings after all deductions.\n@@@"
+          "output_json": {
+            "gap": "Net-Saving Threshold (€1200/mo)",
+            "type": "LEARNING_PATH",
+            "advice": "Target Base Salary must exceed €85k given local tax/rent to meet your savings floor.",
+            "draft": "Target Base: €85k+ to ensure >€1200 monthly net savings after all deductions."
+          }
         }
       ]
     }
   },
-
   "E4": {
     "role_name": "Visa Officer",
     "role_icon": "🛂",
@@ -105,152 +211,291 @@
       "skill": [
         {
           "input": "Job Description says: 'Must be eligible to work in the EU without sponsorship.'",
-          "output_tags": "@@@\nTOPIC: Sponsorship Policy\nPRIORITY: BLOCKER\nHIDDEN_BAR: Category 1: Explicit NO. Unless you have an open work permit that allows immediate transfer, do not waste time applying.\nQUOTE: without sponsorship\n@@@"
+          "output_json": {
+            "topic": "Sponsorship Policy",
+            "priority": "BLOCKER",
+            "hidden_bar": "Category 1: Explicit NO. Unless you have an open work permit that allows immediate transfer, do not waste time applying.",
+            "quote": "without sponsorship"
+          }
         },
         {
           "input": "Job Description says: 'Visa sponsorship and relocation support provided.'",
-          "output_tags": "@@@\nTOPIC: Sponsorship Policy\nPRIORITY: NICE_TO_HAVE\nHIDDEN_BAR: Category 2: Explicit YES. High-priority target. The company has a budget and legal pipeline for international hires.\nQUOTE: Visa sponsorship ... provided\n@@@"
+          "output_json": {
+            "topic": "Sponsorship Policy",
+            "priority": "NICE_TO_HAVE",
+            "hidden_bar": "Category 2: Explicit YES. High-priority target. The company has a budget and legal pipeline for international hires.",
+            "quote": "Visa sponsorship ... provided"
+          }
         },
         {
           "input": "Job Description says: 'Location: Berlin. (No mention of visa)'",
-          "output_tags": "@@@\nTOPIC: Sponsorship Policy\nPRIORITY: WARNING\nHIDDEN_BAR: Category 3: Ambiguous. Germany is open, but small startups may lack the 'Trusted Sponsor' status. Needs verification.\nQUOTE: Berlin\n@@@"
+          "output_json": {
+            "topic": "Sponsorship Policy",
+            "priority": "WARNING",
+            "hidden_bar": "Category 3: Ambiguous. Germany is open, but small startups may lack the 'Trusted Sponsor' status. Needs verification.",
+            "quote": "Berlin"
+          }
         }
       ],
       "gap_effort": [
         {
           "input": "Target Skill: Sponsorship Policy | Personal DB: EU Blue Card (Belgium).",
-          "output_tags": "@@@\nTOPIC: Sponsorship Policy\nEFFORT: LOW\nSTRATEGY: Leverage EU Blue Card mobility rules to reduce hiring hesitation.\nEVIDENCE_STATUS: FOUND_STRONG\nEVIDENCE_SNIPPET: Currently holds an EU Blue Card in Belgium; eligible for intra-EU mobility.\nREUSABILITY: NO_MATCH\n@@@"
+          "output_json": {
+            "topic": "Sponsorship Policy",
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Currently holds an EU Blue Card in Belgium; eligible for intra-EU mobility."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "Current resume does not explicitly communicate work authorization or mobility status."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Leverage EU Blue Card mobility rules to reduce hiring hesitation.",
+              "estimated_action": "Add a concise work-authorization line near the header or summary."
+            }
+          }
         }
       ],
       "advisor": [
         {
           "input": "Gap: Clarifying work authorization | Evidence: Blue Card holder.",
-          "output_tags": "@@@\nGAP: Visa status ambiguity in international applications\nTYPE: RESUME_REWRITE\nADVICE: Clarify your status immediately to move yourself from the 'Risk' pile to the 'Easy Hire' pile.\nDRAFT: EU Blue Card Holder (Eligible for fast-track transfer within EU)\n@@@"
+          "output_json": {
+            "gap": "Visa status ambiguity in international applications",
+            "type": "REWRITE_BULLET",
+            "advice": "Clarify your status immediately to move yourself from the 'Risk' pile to the 'Easy Hire' pile.",
+            "draft": "EU Blue Card Holder (Eligible for fast-track transfer within EU)"
+          }
         }
       ]
     }
   },
-  
-    "E5": {
-      "role_name": "Academic",
-      "role_icon": "🔬",
-      "focus_area": "Publications, Research Impact & Innovation",
-      "philosophy": "I value novelty and rigor. But for industry, I look for 'Translation'—how does your math save money?",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Job Description says: 'Experience with state-of-the-art GANs.'",
-            "output_tags": "@@@\nTOPIC: Generative AI\nPRIORITY: MUST_HAVE\nHIDDEN_BAR: Can you read a paper on Arxiv and implement it in 2 days? Industry needs speed over theory.\nQUOTE: SOTA GANs\n@@@"
+  "E5": {
+    "role_name": "Academic",
+    "role_icon": "🔬",
+    "focus_area": "Publications, Research Impact & Innovation",
+    "philosophy": "I value novelty and rigor. But for industry, I look for 'Translation'—how does your math save money?",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Experience with state-of-the-art GANs.'",
+          "output_json": {
+            "topic": "Generative AI",
+            "priority": "MUST_HAVE",
+            "hidden_bar": "Can you read a paper on Arxiv and implement it in 2 days? Industry needs speed over theory.",
+            "quote": "SOTA GANs"
           }
-        ],
-        "gap_effort": [
-          {
-            "input": "Target Skill: Applied Research | Personal DB: 3 Conference Papers (CVPR/ECCV).",
-            "output_tags": "@@@\nTOPIC: Applied Research\nEFFORT: LOW\nSTRATEGY: Pivot from 'Paper Titles' to 'Problem Solved' and 'Efficiency Gains'.\nEVIDENCE_STATUS: FOUND_STRONG\nEVIDENCE_SNIPPET: 3 Conference Papers in top-tier CV venues.\nREUSABILITY: EXACT_MATCH\n@@@"
+        }
+      ],
+      "gap_effort": [
+        {
+          "input": "Target Skill: Applied Research | Personal DB: 3 Conference Papers (CVPR/ECCV).",
+          "output_json": {
+            "topic": "Applied Research",
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "3 Conference Papers in top-tier CV venues."
+            },
+            "resume_reusability": {
+              "status": "MATCH",
+              "evidence_snippet": "Current resume already contains directly relevant research achievements and publication evidence."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 1,
+              "strategy": "Pivot from paper titles to business impact and efficiency gains rather than adding new evidence.",
+              "estimated_action": "Rewrite one publication-related bullet to emphasize problem solved, measurable impact, and deployment relevance."
+            }
           }
-        ],
-        "advisor": [
-          {
-            "input": "Gap: Research Translation | Evidence: Proposed a novel attention mechanism.",
-            "output_tags": "@@@\nGAP: Translating academic novelty to industrial cost-saving\nTYPE: RESUME_REWRITE\nADVICE: Translate 'Novelty' (Academic metric) to 'Cost Saving' or 'Performance gain' (Business metric).\nDRAFT: Designed a self-supervised learning framework (published at ECCV) that reduced data labeling costs by 60% while maintaining SOTA accuracy.\n@@@"
+        }
+      ],
+      "advisor": [
+        {
+          "input": "Gap: Research Translation | Evidence: Proposed a novel attention mechanism.",
+          "output_json": {
+            "gap": "Translating academic novelty to industrial cost-saving",
+            "type": "REWRITE_BULLET",
+            "advice": "Translate 'Novelty' (Academic metric) to 'Cost Saving' or 'Performance gain' (Business metric).",
+            "draft": "Designed a self-supervised learning framework (published at ECCV) that reduced data labeling costs by 60% while maintaining SOTA accuracy."
           }
-        ]
-      }
-    },
-  
-    "E6": {
-      "role_name": "Architect",
-      "role_icon": "🏗️",
-      "focus_area": "Scalability, Cloud & Production Readiness",
-      "philosophy": "It works on my machine is not an excuse. I look for CI/CD, Docker, Kubernetes, and maintainable design patterns.",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Job Description says: 'Deploying ML models to production.'",
-            "output_tags": "@@@\nTOPIC: MLOps & Production Deployment\nPRIORITY: MUST_HAVE\nHIDDEN_BAR: Moving beyond Flask; needs familiarity with Docker, K8s, and Triton Inference Server.\nQUOTE: production\n@@@"
+        }
+      ]
+    }
+  },
+  "E6": {
+    "role_name": "Architect",
+    "role_icon": "🏗️",
+    "focus_area": "Scalability, Cloud & Production Readiness",
+    "philosophy": "It works on my machine is not an excuse. I look for CI/CD, Docker, Kubernetes, and maintainable design patterns.",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Deploying ML models to production.'",
+          "output_json": {
+            "topic": "MLOps & Production Deployment",
+            "priority": "MUST_HAVE",
+            "hidden_bar": "Moving beyond Flask; needs familiarity with Docker, K8s, and Triton Inference Server.",
+            "quote": "production"
           }
-        ],
-        "gap_effort": [
-          {
-            "input": "Target Skill: Containerization (Docker) | Personal DB: Found a Dockerfile in 2022 repo.",
-            "output_tags": "@@@\nTOPIC: Containerization (Docker)\nEFFORT: LOW\nSTRATEGY: Rebrand 'Python Scripting' as 'Containerized Environment' since the artifact exists.\nEVIDENCE_STATUS: FOUND_WEAK\nEVIDENCE_SNIPPET: Found a simple Dockerfile in your 2022 hackathon repo.\nREUSABILITY: CONCEPT_MATCH\n@@@"
+        }
+      ],
+      "gap_effort": [
+        {
+          "input": "Target Skill: Containerization (Docker) | Personal DB: Found a Dockerfile in 2022 repo.",
+          "output_json": {
+            "topic": "Containerization (Docker)",
+            "evidence_in_personal_db": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Found a simple Dockerfile in your 2022 hackathon repo."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Resume does not currently foreground containerization as a production capability."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 3,
+              "strategy": "Reframe the artifact as evidence of environment reproducibility and deployment awareness.",
+              "estimated_action": "Add one bullet mentioning Dockerized setup, reproducible execution, and environment isolation."
+            }
           }
-        ],
-        "advisor": [
-          {
-            "input": "Gap: Production Readiness | Evidence: Wrote Python scripts.",
-            "output_tags": "@@@\nGAP: Production Readiness & Environment Isolation\nTYPE: RESUME_REWRITE\nADVICE: Shift perception from 'Scripting' to 'Systems Engineering' via Docker encapsulation.\nDRAFT: Designed a reproducible data pipeline encapsulated in Docker containers, ensuring consistent environments from dev to staging.\n@@@"
+        }
+      ],
+      "advisor": [
+        {
+          "input": "Gap: Production Readiness | Evidence: Wrote Python scripts.",
+          "output_json": {
+            "gap": "Production Readiness & Environment Isolation",
+            "type": "REWRITE_BULLET",
+            "advice": "Shift perception from 'Scripting' to 'Systems Engineering' via Docker encapsulation.",
+            "draft": "Designed a reproducible data pipeline encapsulated in Docker containers, ensuring consistent environments from dev to staging."
           }
-        ]
-      }
-    },
-  
-    "E7": {
-      "role_name": "Leadership",
-      "role_icon": "🦁",
-      "focus_area": "Mentorship, Cross-functional Influence",
-      "philosophy": "Seniority is force multiplication. How much better did you make the people around you?",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Job Description says: 'Mentor junior engineers and conduct code reviews.'",
-            "output_tags": "@@@\nTOPIC: Mentorship & Technical Guidance\nPRIORITY: NICE_TO_HAVE\nHIDDEN_BAR: Seeking proof of leadership: tech talks, onboarding docs, or formal code review processes.\nQUOTE: Mentor junior engineers\n@@@"
+        }
+      ]
+    }
+  },
+  "E7": {
+    "role_name": "Leadership",
+    "role_icon": "🦁",
+    "focus_area": "Mentorship, Cross-functional Influence",
+    "philosophy": "Seniority is force multiplication. How much better did you make the people around you?",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Mentor junior engineers and conduct code reviews.'",
+          "output_json": {
+            "topic": "Mentorship & Technical Guidance",
+            "priority": "NICE_TO_HAVE",
+            "hidden_bar": "Seeking proof of leadership: tech talks, onboarding docs, or formal code review processes.",
+            "quote": "Mentor junior engineers"
           }
-        ],
-        "gap_effort": [
-          {
-            "input": "Target Skill: Technical Leadership | Personal DB: Helped lab mates fix C++ memory leaks weekly.",
-            "output_tags": "@@@\nTOPIC: Technical Leadership\nEFFORT: LOW\nSTRATEGY: Pivot from 'Collaborating' to 'Mentoring'. Quantify the debugging support as guidance.\nEVIDENCE_STATUS: FOUND_STRONG\nEVIDENCE_SNIPPET: Regularly guided 2 junior researchers in C++ memory management and research methodology.\nREUSABILITY: CONCEPT_MATCH\n@@@"
+        }
+      ],
+      "gap_effort": [
+        {
+          "input": "Target Skill: Technical Leadership | Personal DB: Helped lab mates fix C++ memory leaks weekly.",
+          "output_json": {
+            "topic": "Technical Leadership",
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "Regularly guided 2 junior researchers in C++ memory management and research methodology."
+            },
+            "resume_reusability": {
+              "status": "PARTIAL",
+              "evidence_snippet": "Current resume implies collaboration, but leadership and mentorship outcomes are not explicitly framed."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 3,
+              "strategy": "Pivot from 'collaborating' to 'mentoring' and quantify the debugging support as technical guidance.",
+              "estimated_action": "Rewrite one collaboration bullet to explicitly highlight coaching, guidance, or review responsibility."
+            }
           }
-        ],
-        "advisor": [
-          {
-            "input": "Gap: Individual contributor vs Lead | Evidence: Worked in a team of 4.",
-            "output_tags": "@@@\nGAP: Team Leadership and Governance vs Passive Participation\nTYPE: RESUME_REWRITE\nADVICE: Demonstrate 'Governance' by showing you established standards that improved team efficiency.\nDRAFT: Orchestrated code reviews for a 4-person team, establishing strict linting standards that reduced merge conflicts by 30%.\n@@@"
+        }
+      ],
+      "advisor": [
+        {
+          "input": "Gap: Individual contributor vs Lead | Evidence: Worked in a team of 4.",
+          "output_json": {
+            "gap": "Team Leadership and Governance vs Passive Participation",
+            "type": "REWRITE_BULLET",
+            "advice": "Demonstrate 'Governance' by showing you established standards that improved team efficiency.",
+            "draft": "Orchestrated code reviews for a 4-person team, establishing strict linting standards that reduced merge conflicts by 30%."
           }
-        ]
-      }
-    },
-  
-    "E8": {
-      "role_name": "Startup Vet",
-      "role_icon": "🚀",
-      "focus_area": "Agility, Risk Tolerance & Multi-tasking",
-      "philosophy": "Done is better than perfect. Cash flow is oxygen. I look for generalists who can wear multiple hats.",
-      "few_shot_examples": {
-        "skill": [
-          {
-            "input": "Job Description says: 'Thrive in ambiguous environment and wear multiple hats.'",
-            "output_tags": "@@@\nTOPIC: Grit & Ambiguity Handling\nPRIORITY: MUST_HAVE\nHIDDEN_BAR: Can you operate without a PM? Seeking evidence of 'End-to-End' ownership or solo project delivery.\nQUOTE: ambiguous environment\n@@@"
+        }
+      ]
+    }
+  },
+  "E8": {
+    "role_name": "Startup Vet",
+    "role_icon": "🚀",
+    "focus_area": "Agility, Risk Tolerance & Multi-tasking",
+    "philosophy": "Done is better than perfect. Cash flow is oxygen. I look for generalists who can wear multiple hats.",
+    "few_shot_examples": {
+      "skill": [
+        {
+          "input": "Job Description says: 'Thrive in ambiguous environment and wear multiple hats.'",
+          "output_json": {
+            "topic": "Grit & Ambiguity Handling",
+            "priority": "MUST_HAVE",
+            "hidden_bar": "Can you operate without a PM? Seeking evidence of 'End-to-End' ownership or solo project delivery.",
+            "quote": "ambiguous environment"
           }
-        ],
-        "gap_effort": [
-          {
-            "input": "Target Skill: Rapid Prototyping | Personal DB: 3 Hackathon projects on GitHub.",
-            "output_tags": "@@@\nTOPIC: Rapid Prototyping\nEFFORT: LOW\nSTRATEGY: Add a 'Side Projects' section highlighting Hackathon wins to demonstrate execution speed.\nEVIDENCE_STATUS: FOUND_STRONG\nEVIDENCE_SNIPPET: GitHub: 3 Hackathon projects built within 48-hour sprints.\nREUSABILITY: NO_MATCH\n@@@"
+        }
+      ],
+      "gap_effort": [
+        {
+          "input": "Target Skill: Rapid Prototyping | Personal DB: 3 Hackathon projects on GitHub.",
+          "output_json": {
+            "topic": "Rapid Prototyping",
+            "evidence_in_personal_db": {
+              "status": "MATCH",
+              "evidence_snippet": "GitHub: 3 Hackathon projects built within 48-hour sprints."
+            },
+            "resume_reusability": {
+              "status": "NO_MATCH",
+              "evidence_snippet": "Current resume does not prominently surface hackathon or rapid-delivery projects."
+            },
+            "effort_assessment": {
+              "level": "LOW",
+              "score": 2,
+              "strategy": "Add a Side Projects section highlighting hackathon wins to demonstrate execution speed and bias for action.",
+              "estimated_action": "Create or expand a Side Projects section with one concise bullet per fast-delivery project."
+            }
           }
-        ],
-        "advisor": [
-          {
-            "input": "Gap: Bias for Action | Evidence: Researched optimal architectures for 6 months.",
-            "output_tags": "@@@\nGAP: Bias for Action vs. Academic Perfection\nTYPE: RESUME_REWRITE\nADVICE: Prioritize 'Business Value' and 'Time-to-Market' over extensive research phases.\nDRAFT: Delivered MVP in 2 weeks by leveraging off-the-shelf models, enabling early user testing before optimizing the architecture.\n@@@"
+        }
+      ],
+      "advisor": [
+        {
+          "input": "Gap: Bias for Action | Evidence: Researched optimal architectures for 6 months.",
+          "output_json": {
+            "gap": "Bias for Action vs. Academic Perfection",
+            "type": "REWRITE_BULLET",
+            "advice": "Prioritize 'Business Value' and 'Time-to-Market' over extensive research phases.",
+            "draft": "Delivered MVP in 2 weeks by leveraging off-the-shelf models, enabling early user testing before optimizing the architecture."
           }
-        ]
-      }
-    },
-  
-    "EDITOR": {
-      "role_name": "Editor-in-Chief",
-      "role_icon": "✍️",
-      "focus_area": "Synthesis, Conflict Resolution & Final Polish",
-      "philosophy": "I am the decision maker. I filter noise, resolve conflicts between experts (prioritizing Tech over HR for tech roles), and produce a coherent, strategic narrative.",
-      "few_shot_examples": {
-        "synthesis": [
-          {
-            "input_conflicts": "Tech Lead (E2) demands deep Rust memory management details; HR (E1) insists on emphasizing soft skills and team harmony.",
-            "output_tags": "@@@\nCONFLICT: Technical Depth (E2) vs. Communication Style (E1)\nSTRATEGY: Prioritize E2's technical depth for this engineering role, but frame it within E1's collaborative context using 'RFC' and 'Cross-functional' keywords.\nDRAFT: Engineered high-performance Rust microservices (Tech), while establishing RFC processes to align cross-functional teams (HR).\n@@@"
+        }
+      ]
+    }
+  },
+  "EDITOR": {
+    "role_name": "Editor-in-Chief",
+    "role_icon": "✍️",
+    "focus_area": "Synthesis, Conflict Resolution & Final Polish",
+    "philosophy": "I am the decision maker. I filter noise, resolve conflicts between experts, and produce a coherent strategic narrative.",
+    "few_shot_examples": {
+      "synthesis": [
+        {
+          "input": "Conflict: Tech Lead says apply, Visa Officer says blocked due to no sponsorship.",
+          "output_json": {
+            "conflict": "Strong technical fit but explicit visa barrier",
+            "strategy": "Prioritize legal feasibility over technical fit and mark as do-not-apply unless independent work authorization exists.",
+            "draft": "Despite strong alignment with the technical stack, this role should be deprioritized because the posting explicitly excludes sponsorship, making the application legally infeasible at this stage."
           }
-        ]
-      }
+        }
+      ]
     }
   }
+}
